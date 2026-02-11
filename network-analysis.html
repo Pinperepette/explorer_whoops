@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PARRHESEPSTEIN &mdash; Network Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <style>
+        :root {
+            --bg: #08080d; --surface: #10101a; --surface2: #181828;
+            --border: #252540; --accent: #e63946; --accent2: #f4a261;
+            --accent3: #2a9d8f; --text: #ddd; --dim: #777; --gold: #f1c40f;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-width:0; overflow-x:hidden; }
+
+        .topnav {
+            background:#060609; border-bottom:1px solid var(--border);
+            padding:8px 20px; display:flex; gap:18px; align-items:center; font-size:.85em;
+        }
+        .topnav a { color:var(--dim); text-decoration:none; transition:color .2s; }
+        .topnav a:hover { color:var(--accent); }
+        .topnav a.active { color:#e63946; font-weight:bold; border-bottom:2px solid #e63946; padding-bottom:2px; }
+
+        .header {
+            background: linear-gradient(135deg,#120808,#080812);
+            border-bottom: 3px solid var(--accent);
+            padding: 35px 40px 25px; text-align: center;
+        }
+        .header .brand { font-size:.85em; letter-spacing:6px; color:var(--dim); text-transform:uppercase; }
+        .header h1 { font-size:2.6em; color:var(--accent); letter-spacing:3px; margin:4px 0; }
+        .header .term-label {
+            display:inline-block; margin-top:10px; padding:6px 24px;
+            background:rgba(230,57,70,.15); border:1px solid var(--accent);
+            border-radius:20px; font-size:1.3em; color:#ff6b6b; font-weight:bold; letter-spacing:2px;
+        }
+        .header .subtitle { color:var(--dim); margin-top:8px; font-size:.95em; font-style:italic; }
+        .stats-bar { display:flex; justify-content:center; gap:30px; margin-top:20px; flex-wrap:wrap; }
+        .stat { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:10px 22px; text-align:center; }
+        .stat .n { font-size:1.9em; font-weight:bold; color:var(--accent2); }
+        .stat .l { font-size:.8em; color:var(--dim); }
+
+        .container { max-width:1650px; margin:0 auto; padding:20px 25px; width:100%; min-width:0; }
+
+        .section {
+            background:var(--surface); border:1px solid var(--border);
+            border-radius:10px; padding:22px; margin-bottom:22px; min-width:0; overflow:hidden;
+        }
+        .section h2 { color:var(--accent2); font-size:1.3em; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:8px; }
+
+        .analysis-header {
+            background: linear-gradient(135deg, var(--surface2), var(--surface));
+            border:2px solid var(--accent); border-radius:12px;
+            padding:20px 24px; margin-bottom:22px; text-align:center;
+        }
+        .analysis-header h2 { color:var(--accent); font-size:1.6em; border:none; margin-bottom:6px; padding-bottom:0; }
+        .analysis-header .desc { color:var(--dim); font-size:.9em; }
+
+        /* METHODOLOGY */
+        .method-box {
+            background:var(--surface2); border:1px solid var(--border);
+            border-radius:8px; padding:20px; margin-bottom:16px;
+        }
+        .method-box h3 { color:var(--accent3); font-size:1.05em; margin-bottom:10px; }
+        .method-box p { font-size:.9em; line-height:1.7; margin-bottom:8px; }
+        .formula {
+            background:#0a0a14; border:1px solid #333355; border-radius:8px;
+            padding:18px 24px; margin:14px 0; text-align:center;
+            font-size:1.1em; overflow-x:auto;
+        }
+        .formula-desc { font-size:.82em; color:var(--dim); text-align:center; margin-top:6px; }
+        .step-list { list-style:none; counter-reset:step; }
+        .step-list li { counter-increment:step; margin-bottom:10px; padding-left:36px; position:relative; font-size:.9em; line-height:1.6; }
+        .step-list li::before {
+            content:counter(step); position:absolute; left:0; top:0;
+            width:24px; height:24px; border-radius:50%;
+            background:var(--accent); color:#fff; text-align:center;
+            font-size:.75em; line-height:24px; font-weight:bold;
+        }
+
+        /* EVIDENCE */
+        .evidence-box {
+            background:var(--surface2); border-left:4px solid var(--accent);
+            border-radius:0 8px 8px 0; padding:16px 18px; margin-bottom:14px;
+        }
+        .evidence-box.gatekeeper { border-left-color: var(--gold); }
+        .evidence-box.pagerank { border-left-color: var(--accent3); }
+        .evidence-box.community { border-left-color: #9b59b6; }
+        .evidence-box .doc-title {
+            font-weight:bold; color:var(--accent2); font-size:.95em; margin-bottom:6px;
+        }
+        .evidence-box .doc-title a { color:var(--accent2); text-decoration:underline; }
+        .evidence-box .doc-title a:hover { color:var(--accent); }
+        .evidence-box .doc-meta { font-size:.8em; color:var(--dim); margin-bottom:6px; }
+        .evidence-box .doc-text { font-size:.85em; line-height:1.6; color:#bbb; }
+        .evidence-box .score-badge {
+            display:inline-block; background:rgba(230,57,70,.15); border:1px solid var(--accent);
+            border-radius:4px; padding:2px 8px; font-size:.78em; color:var(--accent); margin-right:6px;
+        }
+        .evidence-box .score-badge.gold { background:rgba(241,196,15,.15); border-color:var(--gold); color:var(--gold); }
+        .evidence-box .score-badge.teal { background:rgba(42,157,143,.15); border-color:var(--accent3); color:var(--accent3); }
+        .evidence-box .score-badge.purple { background:rgba(155,89,182,.15); border-color:#9b59b6; color:#9b59b6; }
+
+        /* CHARTS */
+        .chart-container { position:relative; width:100%; max-width:800px; margin:16px auto; }
+        .chart-row { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin:16px 0; }
+
+        /* KEY FINDING */
+        .key-finding {
+            background:linear-gradient(135deg, rgba(230,57,70,.08), rgba(244,162,97,.06));
+            border:1px solid var(--accent); border-radius:10px;
+            padding:18px 22px; margin:16px 0;
+        }
+        .key-finding h3 { color:var(--accent); font-size:1em; margin-bottom:8px; }
+        .key-finding p { font-size:.9em; line-height:1.7; }
+
+        /* COMMUNITY TABLE */
+        .comm-table { width:100%; border-collapse:collapse; font-size:.85em; margin:14px 0; }
+        .comm-table th { background:var(--surface2); color:var(--accent2); padding:10px 12px; text-align:left; border-bottom:2px solid var(--border); }
+        .comm-table td { padding:8px 12px; border-bottom:1px solid var(--border); }
+        .comm-table tr:hover td { background:rgba(255,255,255,.03); }
+
+        /* TWO-COL */
+        .two-col { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+
+        /* RESPONSIVE */
+        @media(max-width:900px) {
+            .topnav { padding:8px 10px; gap:10px; font-size:.78em; flex-wrap:wrap; }
+            .header h1 { font-size:1.8em; }
+            .header .term-label { font-size:1em; }
+            .stats-bar { gap:12px; }
+            .stat .n { font-size:1.4em; }
+            .container { padding:12px 10px; }
+            .chart-row, .two-col { grid-template-columns:1fr; }
+            .comm-table { font-size:.78em; }
+            .comm-table th, .comm-table td { padding:6px 8px; }
+        }
+        @media(max-width:500px) {
+            .topnav { padding:6px 8px; gap:8px; font-size:.72em; }
+            .header h1 { font-size:1.4em; }
+            .header { padding:20px 15px 15px; }
+            .section { padding:14px 12px; }
+            .analysis-header { padding:14px 16px; }
+            .analysis-header h2 { font-size:1.2em; }
+            .formula { padding:12px 10px; font-size:.9em; }
+            .evidence-box { padding:12px 14px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="topnav">
+    <a href="index.html">Analisi "Whoops"</a>
+    <a href="snow-white.html">Analisi "Snow White"</a>
+    <a href="code-language.html">Linguaggio in Codice</a>
+    <a href="bridging-analysis.html">Bridging Analysis</a>
+    <a href="network-analysis.html" class="active">Network Analysis</a>
+</nav>
+
+<div class="header">
+    <div class="brand">PARRHESEPSTEIN &mdash; Analisi Forense Documentale</div>
+    <h1>NETWORK ANALYSIS</h1>
+    <div class="term-label">Spectral &bull; PageRank &bull; UMAP</div>
+    <div class="subtitle">Analisi della rete semantica dei documenti tramite teoria spettrale dei grafi, PageRank e riduzione dimensionale</div>
+    <div class="stats-bar">
+        <div class="stat"><div class="n">3,140,085</div><div class="l">Chunk nel DB</div></div>
+        <div class="stat"><div class="n">30,000</div><div class="l">Campione Analizzato</div></div>
+        <div class="stat"><div class="n">450,000</div><div class="l">Archi nel Grafo</div></div>
+        <div class="stat"><div class="n">40</div><div class="l">Comunit&agrave; Scoperte</div></div>
+        <div class="stat"><div class="n">384</div><div class="l">Dimensioni Embedding</div></div>
+    </div>
+</div>
+
+<div class="container">
+
+<!-- ======================================================= -->
+<!--  METHODOLOGY OVERVIEW                                    -->
+<!-- ======================================================= -->
+<div class="section">
+    <h2>Metodologia: Tre Analisi Indipendenti</h2>
+    <p style="font-size:.9em;line-height:1.7;margin-bottom:16px;">
+        Abbiamo applicato tre tecniche matematiche distinte sullo stesso campione di 30.000 chunk
+        (campionamento uniforme su 3.14M documenti) per rivelare la struttura nascosta della rete documentale.
+        Ogni analisi cattura un aspetto diverso: la <strong>struttura comunitaria</strong> (spettrale),
+        la <strong>topologia dello spazio semantico</strong> (UMAP) e l'<strong>influenza relativa</strong> (PageRank).
+    </p>
+
+    <div class="method-box">
+        <h3>Pipeline Comune</h3>
+        <ul class="step-list">
+            <li>Campionamento uniforme: 20 punti equidistanti nel DB, 1.500 chunk ciascuno &rarr; 30.000 chunk totali</li>
+            <li>Estrazione embedding 384-dimensionali (paraphrase-multilingual-MiniLM-L12-v2)</li>
+            <li>Costruzione grafo k-NN nello spazio coseno (k=15&ndash;20)</li>
+            <li>Applicazione algoritmi di analisi (Spectral / UMAP+KDE / PageRank+HITS)</li>
+            <li>Community detection (Louvain) e identificazione documenti chiave</li>
+        </ul>
+    </div>
+</div>
+
+<!-- ======================================================= -->
+<!--  ANALYSIS 1: SPECTRAL CLUSTERING + GATEKEEPERS           -->
+<!-- ======================================================= -->
+<div class="analysis-header">
+    <h2>ANALISI 1 &mdash; Spectral Clustering + Gatekeeper Detection</h2>
+    <div class="desc">Teoria spettrale dei grafi &bull; Autovalori del Laplaciano &bull; Betweenness Centrality</div>
+</div>
+
+<div class="section">
+    <h2>Teoria: Il Laplaciano del Grafo</h2>
+
+    <div class="method-box">
+        <h3>Grafo k-NN Pesato</h3>
+        <p>
+            Ogni documento diventa un nodo. Per ciascun nodo, calcoliamo i <strong>k=20 vicini pi&ugrave; simili</strong>
+            nello spazio coseno 384-dimensionale. Il peso di ogni arco &egrave; la similarit&agrave; coseno:
+        </p>
+        <div class="formula" id="formula-cosine"></div>
+        <div class="formula-desc">Similarit&agrave; coseno tra embedding di documenti</div>
+    </div>
+
+    <div class="method-box">
+        <h3>Matrice Laplaciana Normalizzata</h3>
+        <p>
+            Il <strong>Laplaciano normalizzato</strong> del grafo codifica la struttura di connettivit&agrave;.
+            I suoi autovalori rivelano la separazione naturale in cluster:
+        </p>
+        <div class="formula" id="formula-laplacian"></div>
+        <div class="formula-desc">D = matrice diagonale dei gradi, W = matrice di adiacenza pesata</div>
+        <p style="margin-top:12px;">
+            L'<strong>eigengap</strong> (salto tra autovalori consecutivi) indica il numero naturale di cluster:
+            il pi&ugrave; grande salto dopo &lambda;<sub>0</sub>=0 suggerisce il taglio ottimale.
+        </p>
+        <div class="formula" id="formula-eigengap"></div>
+        <div class="formula-desc">Il massimo eigengap determina il numero naturale di cluster k*</div>
+    </div>
+
+    <div class="method-box">
+        <h3>Gatekeeper Score</h3>
+        <p>
+            Un <strong>gatekeeper</strong> &egrave; un documento che funge da ponte tra comunit&agrave; diverse.
+            Combinando la <em>betweenness centrality</em> (quanti cammini minimi passano per quel nodo)
+            con il numero di comunit&agrave; distinte a cui &egrave; connesso:
+        </p>
+        <div class="formula" id="formula-gatekeeper"></div>
+        <div class="formula-desc">Betweenness centrality pesata per il numero di comunit&agrave; connesse</div>
+    </div>
+</div>
+
+<div class="section">
+    <h2>Risultati Spettrali</h2>
+
+    <div class="key-finding">
+        <h3>Numero Naturale di Cluster: k* = 12</h3>
+        <p>
+            L'analisi degli autovalori del Laplaciano rivela un <strong>eigengap massimo</strong> tra &lambda;<sub>11</sub> e &lambda;<sub>12</sub>
+            (gap = 0.00295), suggerendo che i documenti si organizzano naturalmente in <strong>12 macro-gruppi tematici</strong>.
+            L'algoritmo di Louvain, operando a risoluzione pi&ugrave; fine, identifica <strong>40 comunit&agrave;</strong>
+            con una modularit&agrave; di <strong>0.8206</strong> (eccellente &mdash; indica struttura comunitaria molto forte).
+        </p>
+    </div>
+
+    <div class="chart-row">
+        <div class="chart-container">
+            <canvas id="chart-eigenvalues"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="chart-eigengaps"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-container" style="max-width:900px;">
+        <canvas id="chart-communities"></canvas>
+    </div>
+</div>
+
+<div class="section">
+    <h2>Top Gatekeeper: Documenti-Ponte tra Comunit&agrave;</h2>
+    <p style="font-size:.9em;line-height:1.7;margin-bottom:16px;">
+        I gatekeeper sono documenti che collegano comunit&agrave; semantiche altrimenti separate.
+        Un documento con alto gatekeeper score occupa una posizione strategica nella rete &mdash;
+        rimuovendolo, interi cluster perderebbero connessione.
+    </p>
+
+    <div class="evidence-box gatekeeper">
+        <div class="doc-title">
+            <span class="score-badge gold">#1 Gatekeeper Score: 0.0434</span>
+            <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA01131043.pdf" target="_blank">EFTA01131043</a> (DataSet 9)
+        </div>
+        <div class="doc-meta">Betweenness: 0.00724 &bull; Comunit&agrave; connesse: 5 &bull; Community: 1</div>
+        <div class="doc-text">
+            Documento accademico sulla propriet&agrave; virtuale e diritto fiscale. Discute se i beni virtuali
+            debbano essere trattati come "vera propriet&agrave;" ai fini legali. Un tema apparentemente estraneo
+            che connette comunit&agrave; legali, finanziarie e tecnologiche.
+        </div>
+    </div>
+
+    <div class="evidence-box gatekeeper">
+        <div class="doc-title">
+            <span class="score-badge gold">#2 Gatekeeper Score: 0.0399</span>
+            <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00610965.pdf" target="_blank">EFTA00610965</a> (DataSet 9)
+        </div>
+        <div class="doc-meta">Betweenness: 0.00307 &bull; Comunit&agrave; connesse: 12 &bull; Community: 2</div>
+        <div class="doc-text">
+            Registri giudiziari CM/ECF del tribunale della Florida meridionale. Include certificati di servizio
+            riguardanti <strong>Wachovia Bank</strong> e <strong>Scott W. Rothstein</strong> &mdash; il noto avvocato
+            della Florida condannato per lo schema Ponzi da 1.2 miliardi di dollari. Questo documento
+            connette <strong>12 comunit&agrave; distinte</strong>, il massimo nell'intera rete.
+        </div>
+    </div>
+
+    <div class="evidence-box gatekeeper">
+        <div class="doc-title">
+            <span class="score-badge gold">#3 Gatekeeper Score: 0.0328</span>
+            <a href="https://www.justice.gov/epstein/files/DataSet%2011/EFTA02697971.pdf" target="_blank">EFTA02697971</a> (DataSet 11)
+        </div>
+        <div class="doc-meta">Betweenness: 0.00218 &bull; Comunit&agrave; connesse: 14 &bull; Community: 29</div>
+        <div class="doc-text">
+            Email da <strong>Terje R&oslash;d-Larsen</strong> (ex presidente dell'International Peace Institute,
+            diplomatico norvegese) a jeevacation@gmail.com (Epstein). L'email &egrave; indirizzata ad
+            <strong>Avi Gil</strong>, ex direttore generale del Ministero degli Esteri israeliano.
+            Connette <strong>14 comunit&agrave;</strong> &mdash; il maggior numero di connessioni cross-community.
+        </div>
+    </div>
+
+    <div class="evidence-box gatekeeper">
+        <div class="doc-title">
+            <span class="score-badge gold">#4 Gatekeeper Score: 0.0323</span>
+            <a href="https://www.justice.gov/epstein/files/DataSet%2010/EFTA01776230.pdf" target="_blank">EFTA01776230</a> (DataSet 10)
+        </div>
+        <div class="doc-meta">Betweenness: 0.00403 &bull; Comunit&agrave; connesse: 7 &bull; Community: 35</div>
+        <div class="doc-text">
+            Email a Jeffrey Epstein (18 giugno 2011). Contiene riferimenti redatti a incontri mancati
+            e la tipica clausola di riservatezza. La betweenness centrality molto alta (0.00403)
+            indica che questo documento &egrave; un nodo di passaggio critico nei percorsi informativi.
+        </div>
+    </div>
+
+    <div class="evidence-box gatekeeper">
+        <div class="doc-title">
+            <span class="score-badge gold">#5 Gatekeeper Score: 0.0312</span>
+            <a href="https://www.justice.gov/epstein/files/DataSet%201/EFTA00000837.pdf" target="_blank">EFTA00000837</a> (DataSet 1)
+        </div>
+        <div class="doc-meta">Betweenness: 0.00521 &bull; Comunit&agrave; connesse: 5 &bull; Community: 3</div>
+        <div class="doc-text">
+            Modulo FBI FD-674a (documentazione fotografica). Riferimento a una location a
+            <strong>East Manhattan, New York</strong>. DataSet 1 contiene le prove fisiche dell'FBI &mdash;
+            la pi&ugrave; alta betweenness di questo set indica che le prove fotografiche
+            collegano diverse linee investigative.
+        </div>
+    </div>
+
+    <div class="evidence-box gatekeeper">
+        <div class="doc-title">
+            <span class="score-badge gold">#10 Gatekeeper Score: 0.0241</span>
+            <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00224866.pdf" target="_blank">EFTA00224866</a> (DataSet 9)
+        </div>
+        <div class="doc-meta">Betweenness: 0.00201 &bull; Comunit&agrave; connesse: 11 &bull; Community: 0</div>
+        <div class="doc-text">
+            Lettera dello studio legale <strong>Kirkland &amp; Ellis LLP</strong> (Jay Lefkowitz) del
+            <strong>18 agosto 2008</strong>, in risposta a una lettera riguardante la "civil restitution"
+            di Jeffrey Epstein. Connette 11 comunit&agrave; &mdash; questo studio legale era al centro
+            del plea deal controverso.
+        </div>
+    </div>
+
+    <div class="evidence-box gatekeeper">
+        <div class="doc-title">
+            <span class="score-badge gold">#14 Gatekeeper Score: 0.0205</span>
+            <a href="https://www.justice.gov/epstein/files/DataSet%2010/EFTA01776335.pdf" target="_blank">EFTA01776335</a> (DataSet 10)
+        </div>
+        <div class="doc-meta">Betweenness: 0.00228 &bull; Comunit&agrave; connesse: 8 &bull; Community: 7</div>
+        <div class="doc-text">
+            Email (26 agosto 2011) con messaggio inoltrato da <strong>Sean Parker</strong>
+            (co-fondatore di Napster e primo presidente di Facebook) a Epstein.
+            Discussione su calendario e appuntamenti per la settimana del 17.
+        </div>
+    </div>
+
+    <div class="evidence-box gatekeeper">
+        <div class="doc-title">
+            <span class="score-badge gold">#17 Gatekeeper Score: 0.0192</span>
+            <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00225044.pdf" target="_blank">EFTA00225044</a> (DataSet 9)
+        </div>
+        <div class="doc-meta">Betweenness: 0.00214 &bull; Comunit&agrave; connesse: 8 &bull; Community: 2</div>
+        <div class="doc-text">
+            Documento che menziona la redazione di lettere per le firme di "Jeff" e
+            <strong>Alex Acosta</strong> (il procuratore che negozi&ograve; il controverso plea deal del 2008).
+            Connette 8 comunit&agrave; &mdash; un nodo cruciale nell'intersezione tra difesa legale e procedura federale.
+        </div>
+    </div>
+
+    <div class="evidence-box gatekeeper">
+        <div class="doc-title">
+            <span class="score-badge gold">#44 Gatekeeper Score: 0.0129</span>
+            <a href="https://www.justice.gov/epstein/files/DataSet%2010/EFTA01927631.pdf" target="_blank">EFTA01927631</a> (DataSet 10)
+        </div>
+        <div class="doc-meta">Betweenness: 0.00184 &bull; Comunit&agrave; connesse: 6 &bull; Community: 11</div>
+        <div class="doc-text">
+            Email di <strong>Martin Nowak</strong> (professore di matematica e biologia ad Harvard)
+            a Epstein riguardante un affitto di $350K/anno. Nowak diresse il Program for Evolutionary Dynamics,
+            finanziato con $6.5M da Epstein. Questo documento connette le sfere accademica e finanziaria.
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <h2>Ponti tra Comunit&agrave; &mdash; Top Connessioni</h2>
+    <p style="font-size:.9em;line-height:1.7;margin-bottom:14px;">
+        L'analisi ha identificato <strong>45 ponti tra comunit&agrave;</strong>. Le connessioni pi&ugrave; dense rivelano
+        quale tipo di documenti collega i diversi cluster tematici.
+    </p>
+    <table class="comm-table">
+        <thead>
+            <tr><th>Ponte</th><th>Archi</th><th>Documento A</th><th>Documento B</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Comm 11 &harr; 13</td><td><strong>7,789</strong></td>
+                <td>Email personali (Epstein)</td><td>Corrispondenza assistente (Lesley Groff)</td>
+            </tr>
+            <tr>
+                <td>Comm 7 &harr; 11</td><td><strong>5,867</strong></td>
+                <td>Email in francese a Epstein</td><td>Corrispondenza personale varia</td>
+            </tr>
+            <tr>
+                <td>Comm 11 &harr; 35</td><td><strong>4,298</strong></td>
+                <td>Corrispondenza quotidiana</td><td>Email con istruzioni operative</td>
+            </tr>
+            <tr>
+                <td>Comm 11 &harr; 26</td><td><strong>3,428</strong></td>
+                <td>Kirkland &amp; Ellis (plea deal)</td><td>Deutsche Bank (Richard Kahn)</td>
+            </tr>
+            <tr>
+                <td>Comm 0 &harr; 2</td><td><strong>3,260</strong></td>
+                <td>Documenti legali USAO</td><td>Registri giudiziari / Rothstein</td>
+            </tr>
+            <tr>
+                <td>Comm 1 &harr; 2</td><td><strong>1,811</strong></td>
+                <td>Documenti accademici / tech</td><td>Atti giudiziari Florida</td>
+            </tr>
+            <tr>
+                <td>Comm 1 &harr; 26</td><td><strong>1,485</strong></td>
+                <td>Broadcom/Qualcomm (tech/finance)</td><td>Southern Financial Trading</td>
+            </tr>
+            <tr>
+                <td>Comm 7 &harr; 13</td><td><strong>1,545</strong></td>
+                <td>Email multilingue</td><td>Documenti legali / FAA</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+<!-- ======================================================= -->
+<!--  ANALYSIS 2: SEMANTIC TOPOLOGY (UMAP + KDE)              -->
+<!-- ======================================================= -->
+<div class="analysis-header">
+    <h2>ANALISI 2 &mdash; Topologia Semantica</h2>
+    <div class="desc">UMAP (384D &rarr; 2D) &bull; Kernel Density Estimation &bull; Distribuzione Spaziale</div>
+</div>
+
+<div class="section">
+    <h2>Teoria: Riduzione Dimensionale e Densit&agrave;</h2>
+
+    <div class="method-box">
+        <h3>UMAP (Uniform Manifold Approximation and Projection)</h3>
+        <p>
+            UMAP riduce lo spazio da 384 dimensioni a 2, preservando sia la struttura locale
+            (documenti simili restano vicini) che quella globale (cluster distinti restano separati).
+            A differenza di t-SNE, UMAP ha solide basi nella topologia algebrica:
+        </p>
+        <div class="formula" id="formula-umap"></div>
+        <div class="formula-desc">Funzione di costo cross-entropy tra grafi fuzzy nello spazio originale e proiettato</div>
+        <p style="margin-top:8px; font-size:.88em;">
+            Parametri: n_neighbors=15 (localit&agrave;), min_dist=0.1 (compattezza), metrica=coseno.
+        </p>
+    </div>
+
+    <div class="method-box">
+        <h3>Kernel Density Estimation (KDE)</h3>
+        <p>
+            Sulla proiezione 2D, stimiamo la densit&agrave; di probabilit&agrave; con un kernel gaussiano
+            su una griglia 200&times;200, usando il metodo di Scott per la bandwidth:
+        </p>
+        <div class="formula" id="formula-kde"></div>
+        <div class="formula-desc">Stima della densit&agrave; con kernel gaussiano &mdash; h calcolato con il metodo di Scott</div>
+    </div>
+</div>
+
+<div class="section">
+    <h2>Risultati: Distribuzione Spaziale dei Dataset</h2>
+
+    <div class="key-finding">
+        <h3>Spazio Semantico Continuo &mdash; Nessun Vuoto Rilevato</h3>
+        <p>
+            L'analisi KDE non ha rilevato <strong>vuoti semantici significativi</strong> (regioni a bassa densit&agrave;
+            circondate da alta densit&agrave;). Questo indica che il corpus documentale copre lo spazio
+            semantico in modo <strong>continuo e denso</strong> &mdash; non esistono "buchi" dove ci si aspetterebbe
+            di trovare documenti ma non ce ne sono. La densit&agrave; varia da 0 (bordi) a 0.0226 (picco),
+            con mediana di soli 0.000025, indicando una distribuzione fortemente concentrata in pochi cluster densi.
+        </p>
+    </div>
+
+    <div class="chart-container" style="max-width:700px;">
+        <canvas id="chart-dataset-spatial"></canvas>
+    </div>
+
+    <table class="comm-table">
+        <thead>
+            <tr><th>Dataset</th><th>Centroide (x,y)</th><th>Dispersione (&sigma;)</th><th>N. Chunk</th><th>Caratteristica</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>DataSet 1</strong></td>
+                <td>(5.30, 13.04)</td><td>&sigma;x=2.78, &sigma;y=3.31</td><td>1,500</td>
+                <td>Prove FBI &mdash; <strong>isolato</strong> nello spazio, cluster compatto</td>
+            </tr>
+            <tr>
+                <td><strong>DataSet 9</strong></td>
+                <td>(10.45, 4.35)</td><td>&sigma;x=4.94, &sigma;y=3.92</td><td>13,500</td>
+                <td>Documenti legali e email &mdash; la pi&ugrave; ampia dispersione</td>
+            </tr>
+            <tr>
+                <td><strong>DataSet 10</strong></td>
+                <td>(11.37, 4.55)</td><td>&sigma;x=4.25, &sigma;y=4.41</td><td>9,000</td>
+                <td>Email e corrispondenza &mdash; sovrapposto con DataSet 9</td>
+            </tr>
+            <tr>
+                <td><strong>DataSet 11</strong></td>
+                <td>(12.50, 7.76)</td><td>&sigma;x=3.68, &sigma;y=3.50</td><td>6,000</td>
+                <td>Email pi&ugrave; recenti &mdash; leggermente spostato verso l'alto</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="key-finding">
+        <h3>DataSet 1 (Prove FBI): Isola Semantica</h3>
+        <p>
+            Il DataSet 1 (fotografie, rapporti FBI, prove fisiche) &egrave; <strong>spazialmente isolato</strong>
+            rispetto agli altri tre dataset. Il suo centroide (5.30, 13.04) &egrave; distante ~10 unit&agrave; UMAP
+            dai centroidi di DataSet 9/10 (~10.9, ~4.5). Questo conferma che le prove fisiche dell'FBI
+            hanno una natura semantica fondamentalmente diversa dalla corrispondenza elettronica e dai documenti legali.
+        </p>
+    </div>
+</div>
+
+<div class="section">
+    <h2>Statistiche Densit&agrave;</h2>
+    <div class="two-col">
+        <div class="method-box">
+            <h3>Distribuzione della Densit&agrave;</h3>
+            <table class="comm-table" style="margin:0;">
+                <tr><td>Densit&agrave; Minima</td><td><strong>0.000000</strong></td></tr>
+                <tr><td>Densit&agrave; Massima</td><td><strong>0.022601</strong></td></tr>
+                <tr><td>Media</td><td><strong>0.000867</strong></td></tr>
+                <tr><td>Mediana</td><td><strong>0.000025</strong></td></tr>
+            </table>
+        </div>
+        <div class="method-box">
+            <h3>Interpretazione</h3>
+            <p>
+                Il rapporto media/mediana = <strong>34.7x</strong> rivela una distribuzione
+                estremamente asimmetrica: pochi cluster molto densi circondati da vaste regioni a bassa densit&agrave;.
+                La struttura &egrave; quella di "isole" tematiche dense collegate da "ponti" sottili di documenti
+                di transizione.
+            </p>
+        </div>
+    </div>
+</div>
+
+
+<!-- ======================================================= -->
+<!--  ANALYSIS 3: PAGERANK + HITS                             -->
+<!-- ======================================================= -->
+<div class="analysis-header">
+    <h2>ANALISI 3 &mdash; Document Influence Network</h2>
+    <div class="desc">PageRank &bull; HITS (Hub/Authority) &bull; Semantic Influence Score</div>
+</div>
+
+<div class="section">
+    <h2>Teoria: Misure di Influenza</h2>
+
+    <div class="method-box">
+        <h3>Grafo Diretto k-NN</h3>
+        <p>
+            Costruiamo un <strong>grafo diretto</strong>: ogni documento punta ai suoi k=15 vicini pi&ugrave; simili.
+            Il grafo risultante ha 30.000 nodi e 450.000 archi diretti. L'<strong>in-degree</strong>
+            (quanti documenti puntano a un nodo) rivela quanto un documento &egrave; "attrattivo"
+            nello spazio semantico.
+        </p>
+    </div>
+
+    <div class="method-box">
+        <h3>PageRank</h3>
+        <p>
+            L'algoritmo PageRank (inventato da Google) assegna a ogni nodo un punteggio
+            di "importanza" basato sulla struttura ricorsiva dei link:
+        </p>
+        <div class="formula" id="formula-pagerank"></div>
+        <div class="formula-desc">&alpha; = 0.85 (damping factor), N = 30.000 nodi, B(i) = nodi che puntano a i</div>
+        <p style="margin-top:8px; font-size:.88em;">
+            Un documento ha alto PageRank se molti documenti "importanti" gli somigliano.
+            &Egrave; una misura di <strong>centralit&agrave; ricorsiva</strong>.
+        </p>
+    </div>
+
+    <div class="method-box">
+        <h3>HITS: Hub e Authority</h3>
+        <p>
+            HITS distingue due ruoli: le <strong>Authority</strong> (documenti a cui molti puntano)
+            e gli <strong>Hub</strong> (documenti che puntano a molte authority):
+        </p>
+        <div class="formula" id="formula-hits"></div>
+        <div class="formula-desc">Aggiornamento iterativo fino a convergenza</div>
+    </div>
+
+    <div class="method-box">
+        <h3>Semantic Influence Score</h3>
+        <p>Combiniamo le tre metriche in un punteggio unico:</p>
+        <div class="formula" id="formula-influence"></div>
+        <div class="formula-desc">Punteggio combinato che cattura PageRank, popolarit&agrave; (in-degree) e autorit&agrave;</div>
+    </div>
+</div>
+
+<div class="section">
+    <h2>Risultati PageRank</h2>
+
+    <div class="key-finding">
+        <h3>Distribuzione del PageRank</h3>
+        <p>
+            Il PageRank medio &egrave; 1/N = 0.0000333, ma il massimo raggiunge <strong>0.00160</strong> &mdash;
+            <strong>48 volte</strong> la media. Il 2.64% dei nodi (793 su 30.000) supera la soglia di mean+2&sigma;.
+            L'analisi ha rilevato <strong>42 comunit&agrave;</strong> con modularit&agrave; 0.8132.
+        </p>
+    </div>
+
+    <div class="chart-row">
+        <div class="chart-container">
+            <canvas id="chart-pagerank-top"></canvas>
+        </div>
+        <div class="chart-container">
+            <canvas id="chart-indegree-top"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <h2>Top Documenti per Influenza Semantica</h2>
+    <p style="font-size:.9em;line-height:1.7;margin-bottom:16px;">
+        I documenti con il pi&ugrave; alto <strong>Semantic Influence Score</strong> sono quelli che combinano
+        alto PageRank, alto in-degree e alta Authority. Rappresentano i "baricentri" della rete.
+    </p>
+
+    <div class="evidence-box pagerank">
+        <div class="doc-title">
+            <span class="score-badge teal">#1 Influence: 0.00550</span>
+            <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00743137.pdf" target="_blank">EFTA00743137</a> (DataSet 9)
+        </div>
+        <div class="doc-meta">PageRank: 0.00160 &bull; Authority: 0.0397 &bull; In-degree: 196 &bull; Community: 16</div>
+        <div class="doc-text">
+            Email di Epstein (jeevacation@gmail.com), 5 dicembre 2009: "tell me?"
+            Seguita dalla clausola standard di riservatezza. La brevit&agrave; e il formato standard
+            rendono questo documento semanticamente "centrale" &mdash; molti altri documenti
+            gli assomigliano nella struttura.
+        </div>
+    </div>
+
+    <div class="evidence-box pagerank">
+        <div class="doc-title">
+            <span class="score-badge teal">#2 Influence: 0.00421</span>
+            <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00742566.pdf" target="_blank">EFTA00742566</a> (DataSet 9)
+        </div>
+        <div class="doc-meta">PageRank: 0.00150 &bull; Authority: 0.0325 &bull; In-degree: 149 &bull; Community: 16</div>
+        <div class="doc-text">
+            Email di Epstein, 26 novembre 2009. Con allegati. Stessa struttura standard
+            con clausola di riservatezza. In-degree 149 indica che 149 altri documenti nel campione
+            lo elencano tra i loro 15 pi&ugrave; simili.
+        </div>
+    </div>
+
+    <div class="evidence-box pagerank">
+        <div class="doc-title">
+            <span class="score-badge teal">#7 Influence: 0.00300</span>
+            <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA01011526.pdf" target="_blank">EFTA01011526</a> (DataSet 9)
+        </div>
+        <div class="doc-meta">PageRank: 0.00150 &bull; Authority: 0.000 &bull; In-degree: <strong>273 (MAX)</strong> &bull; Community: 4</div>
+        <div class="doc-text">
+            <strong>Documento con il pi&ugrave; alto in-degree dell'intera rete (273).</strong>
+            Contiene dati codificati/binari (base64 o simile). Authority = 0 ma in-degree massimo &mdash;
+            molti documenti codificati gli somigliano, ma lui stesso non punta a documenti authority.
+            Questo suggerisce un <strong>cluster isolato di dati criptati/codificati</strong> nel corpus.
+        </div>
+    </div>
+
+    <div class="evidence-box pagerank">
+        <div class="doc-title">
+            <span class="score-badge teal">#12 Influence: 0.00244</span>
+            <a href="https://www.justice.gov/epstein/files/DataSet%2010/EFTA01775840.pdf" target="_blank">EFTA01775840</a> (DataSet 10)
+        </div>
+        <div class="doc-meta">PageRank: 0.00132 &bull; Authority: 0.0000 &bull; In-degree: 231 &bull; Community: 8</div>
+        <div class="doc-text">
+            Email in francese a Epstein (8 luglio 2011): "i am waiting for you".
+            Secondo in-degree pi&ugrave; alto (231) &mdash; nodo attrattivo nella comunit&agrave; 8
+            che raggruppa la corrispondenza multilingue.
+        </div>
+    </div>
+</div>
+
+<div class="section">
+    <h2>Influencer per Comunit&agrave;</h2>
+    <p style="font-size:.9em;line-height:1.7;margin-bottom:16px;">
+        Ogni comunit&agrave; ha un "influencer" &mdash; il documento con il pi&ugrave; alto Semantic Influence Score
+        all'interno del cluster. Questi documenti definiscono il "tema" di ciascuna comunit&agrave;.
+    </p>
+
+    <div class="evidence-box community">
+        <div class="doc-title">
+            <span class="score-badge purple">Comm. 16 (1,278 nodi)</span>
+            <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00743137.pdf" target="_blank">EFTA00743137</a> &mdash; Influence: 0.00550
+        </div>
+        <div class="doc-meta">DataSet 9: 782 &bull; DataSet 10: 366 &bull; DataSet 11: 130</div>
+        <div class="doc-text">
+            <strong>Email brevi di Epstein.</strong> Questa comunit&agrave; raggruppa le email
+            sintetiche inviate da jeevacation@gmail.com &mdash; messaggi come "tell me?", "well?", "great".
+            Sono i documenti pi&ugrave; "centrali" perch&eacute; la loro struttura standardizzata
+            li rende semanticamente simili a migliaia di altri.
+        </div>
+    </div>
+
+    <div class="evidence-box community">
+        <div class="doc-title">
+            <span class="score-badge purple">Comm. 12 (3,337 nodi)</span>
+            <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00225672.pdf" target="_blank">EFTA00225672</a> &mdash; Influence: 0.00079
+        </div>
+        <div class="doc-meta">DataSet 9: 3,137 &bull; DataSet 10: 178 &bull; DataSet 11: 22</div>
+        <div class="doc-text">
+            <strong>Documenti legali e procedurali.</strong> L'influencer menziona le "alleged victims"
+            e il diritto di Epstein di contestare le accuse. Comunit&agrave; dominata dal DataSet 9 (94%)
+            &mdash; il cuore dei documenti giudiziari.
+        </div>
+    </div>
+
+    <div class="evidence-box community">
+        <div class="doc-title">
+            <span class="score-badge purple">Comm. 4 (1,657 nodi)</span>
+            <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA01011526.pdf" target="_blank">EFTA01011526</a> &mdash; Influence: 0.00300
+        </div>
+        <div class="doc-meta">DataSet 9: 1,481 &bull; DataSet 11: 148 &bull; DataSet 10: 26</div>
+        <div class="doc-text">
+            <strong>Dati codificati/criptati.</strong> Un'intera comunit&agrave; di 1,657 chunk
+            contiene prevalentemente dati in formato binario/base64. Quasi totalmente dal DataSet 9 (89%).
+            La natura di questi dati codificati resta non determinata.
+        </div>
+    </div>
+
+    <div class="evidence-box community">
+        <div class="doc-title">
+            <span class="score-badge purple">Comm. 0 (1,433 nodi)</span>
+            <a href="https://www.justice.gov/epstein/files/DataSet%2010/EFTA01651549.pdf" target="_blank">EFTA01651549</a> &mdash; Influence: 0.00084
+        </div>
+        <div class="doc-meta">DataSet 10: 1,129 &bull; DataSet 9: 286 &bull; DataSet 11: 17</div>
+        <div class="doc-text">
+            <strong>Victim Services e corrispondenza FBI.</strong> L'influencer &egrave; un'email di
+            VictimServices riguardante un "Epstein Victim - Unknown Contact Information" (2 novembre 2020).
+            Questa comunit&agrave; raccoglie i documenti relativi all'assistenza alle vittime.
+        </div>
+    </div>
+
+    <div class="evidence-box community">
+        <div class="doc-title">
+            <span class="score-badge purple">Comm. 13 (589 nodi)</span>
+            <a href="https://www.justice.gov/epstein/files/DataSet%201/EFTA00000179.pdf" target="_blank">EFTA00000179</a> &mdash; Influence: 0.00030
+        </div>
+        <div class="doc-meta">DataSet 1: 560 &bull; DataSet 9: 14 &bull; DataSet 10: 10</div>
+        <div class="doc-text">
+            <strong>Prove fotografiche FBI.</strong> Il 95% di questa comunit&agrave; proviene dal DataSet 1
+            (prove fisiche). L'influencer &egrave; un documento fotografico classificato. Cluster quasi puro,
+            confermando l'isolamento semantico delle prove fisiche osservato nell'analisi UMAP.
+        </div>
+    </div>
+</div>
+
+
+<!-- ======================================================= -->
+<!--  COMBINED FINDINGS                                        -->
+<!-- ======================================================= -->
+<div class="analysis-header" style="border-color:var(--gold);">
+    <h2 style="color:var(--gold);">SINTESI &mdash; Pattern Emergenti</h2>
+    <div class="desc">Convergenza dei risultati dalle tre analisi indipendenti</div>
+</div>
+
+<div class="section">
+    <h2>Convergenze tra le Analisi</h2>
+
+    <div class="key-finding">
+        <h3>1. Struttura Comunitaria Robusta</h3>
+        <p>
+            Sia l'analisi spettrale (40 comunit&agrave;, modularit&agrave; 0.82) che PageRank (42 comunit&agrave;,
+            modularit&agrave; 0.81) convergono su una struttura altamente modulare. L'eigengap suggerisce
+            12 macro-cluster, che Louvain raffina in ~40 sotto-comunit&agrave;. La modularit&agrave; > 0.8
+            &egrave; eccezionalmente alta &mdash; i documenti si organizzano in gruppi tematici molto netti.
+        </p>
+    </div>
+
+    <div class="key-finding">
+        <h3>2. Il Cluster dei Dati Codificati</h3>
+        <p>
+            EFTA01011526 emerge sia come gatekeeper spettrale (#2 per in-degree = 273) che come
+            influencer PageRank (#7). Un'intera comunit&agrave; di <strong>1,657 chunk</strong> contiene
+            dati in formato codificato. Questo cluster, quasi interamente dal DataSet 9, rappresenta
+            una massa significativa di contenuto la cui natura resta da determinare.
+        </p>
+    </div>
+
+    <div class="key-finding">
+        <h3>3. Prove FBI: Isola Semantica Confermata</h3>
+        <p>
+            L'analisi UMAP conferma quantitativamente ci&ograve; che l'analisi comunitaria rivela:
+            il DataSet 1 (prove FBI) &egrave; <strong>spazialmente e tematicamente isolato</strong>.
+            Nella mappa UMAP, il suo centroide &egrave; distante ~10 unit&agrave; dagli altri dataset.
+            Nella rete PageRank, forma una comunit&agrave; quasi pura (95% DataSet 1).
+            L'unico gatekeeper del DataSet 1 nella top 50 &egrave; EFTA00000837 (#5) &mdash;
+            documentazione fotografica di East Manhattan.
+        </p>
+    </div>
+
+    <div class="key-finding">
+        <h3>4. Nodi Diplomatici e Accademici come Ponti</h3>
+        <p>
+            I gatekeeper pi&ugrave; significativi non sono documenti legali interni, ma connessioni
+            con il mondo esterno: <strong>Terje R&oslash;d-Larsen</strong> (diplomazia, 14 comunit&agrave;),
+            <strong>Sean Parker</strong> (tech, 8 comunit&agrave;), <strong>Martin Nowak</strong>
+            (accademia, 6 comunit&agrave;). Questi documenti collegano sfere altrimenti separate.
+        </p>
+    </div>
+
+    <div class="key-finding">
+        <h3>5. Il Ponte Rothstein-Wachovia</h3>
+        <p>
+            EFTA00610965 (registri giudiziari Rothstein/Wachovia Bank) connette <strong>12 comunit&agrave;</strong>
+            distinte, il massimo tra tutti i gatekeeper. Scott Rothstein, condannato per frode da $1.2B,
+            operava nello stesso distretto giudiziario di Epstein. Il suo caso giudiziario funge da
+            "hub documentale" che collega procedimenti legali, bancari e investigativi.
+        </p>
+    </div>
+</div>
+
+</div><!-- /container -->
+
+<div style="text-align:center; padding:30px; color:var(--dim); font-size:.8em; border-top:1px solid var(--border);">
+    PARRHESEPSTEIN &mdash; Network Analysis | Spectral Clustering + UMAP + PageRank su 30.000 chunk
+    <br>Dati: DOJ FOIA Release &bull; 3,140,085 chunk &bull; ChromaDB + paraphrase-multilingual-MiniLM-L12-v2
+</div>
+
+<script>
+// ===================== KATEX FORMULAS =====================
+const formulas = {
+    'formula-cosine': {
+        tex: "\\text{sim}(d_i, d_j) = \\cos(\\theta) = \\frac{\\vec{e}_i \\cdot \\vec{e}_j}{\\|\\vec{e}_i\\| \\, \\|\\vec{e}_j\\|}",
+    },
+    'formula-laplacian': {
+        tex: "L_{\\text{norm}} = I - D^{-1/2} W D^{-1/2}, \\quad \\lambda_0 \\leq \\lambda_1 \\leq \\cdots \\leq \\lambda_n",
+    },
+    'formula-eigengap': {
+        tex: "k^* = \\arg\\max_{k \\geq 1} \\left( \\lambda_{k+1} - \\lambda_k \\right)",
+    },
+    'formula-gatekeeper': {
+        tex: "G(v) = C_B(v) \\times |\\{\\text{comunit\\`a connesse a } v\\}|, \\quad C_B(v) = \\sum_{s \\neq v \\neq t} \\frac{\\sigma_{st}(v)}{\\sigma_{st}}",
+    },
+    'formula-umap': {
+        tex: "C = \\sum_{e \\in E} \\left[ w_h(e) \\log\\frac{w_h(e)}{w_l(e)} + (1 - w_h(e)) \\log\\frac{1-w_h(e)}{1-w_l(e)} \\right]",
+    },
+    'formula-kde': {
+        tex: "\\hat{f}(x) = \\frac{1}{nh^2} \\sum_{i=1}^{n} K\\!\\left(\\frac{x - x_i}{h}\\right), \\quad K(u) = \\frac{1}{2\\pi} e^{-\\frac{\\|u\\|^2}{2}}",
+    },
+    'formula-pagerank': {
+        tex: "\\text{PR}(i) = \\frac{1-\\alpha}{N} + \\alpha \\sum_{j \\in B(i)} \\frac{\\text{PR}(j)}{L(j)}",
+    },
+    'formula-hits': {
+        tex: "a(i) = \\sum_{j \\to i} h(j), \\quad h(i) = \\sum_{i \\to j} a(j)",
+    },
+    'formula-influence': {
+        tex: "\\text{Influence}(v) = \\text{PR}(v) \\cdot \\left(1 + \\frac{\\deg^{\\text{in}}(v)}{\\max \\deg^{\\text{in}}}\\right) \\cdot \\left(1 + \\frac{\\text{auth}(v)}{\\max \\text{auth}}\\right)",
+    },
+};
+
+Object.entries(formulas).forEach(([id, {tex}]) => {
+    const el = document.getElementById(id);
+    if (el) katex.render(tex, el, { displayMode: true, throwOnError: false });
+});
+
+
+// ===================== CHART.JS GRAPHS =====================
+const COLORS = {
+    red: '#e63946', orange: '#f4a261', teal: '#2a9d8f',
+    gold: '#f1c40f', purple: '#9b59b6', blue: '#3498db',
+    dim: '#555', grid: '#1a1a2e'
+};
+const defaultOpts = {
+    responsive: true,
+    plugins: { legend: { labels: { color: '#aaa', font: { size: 11 } } } },
+    scales: {
+        x: { ticks: { color: '#888', font: { size: 10 } }, grid: { color: COLORS.grid } },
+        y: { ticks: { color: '#888', font: { size: 10 } }, grid: { color: COLORS.grid } }
+    }
+};
+
+// --- Eigenvalues chart ---
+const eigenvalues = [-2.33e-16,0.00184,0.00275,0.00329,0.00437,0.00439,0.00463,0.00678,0.00740,0.00773,0.00819,0.00867,0.01162,0.01216,0.01372,0.01459,0.01596,0.01622,0.01719,0.01902];
+new Chart(document.getElementById('chart-eigenvalues'), {
+    type: 'line',
+    data: {
+        labels: eigenvalues.map((_, i) => 'λ' + i),
+        datasets: [{
+            label: 'Autovalore',
+            data: eigenvalues,
+            borderColor: COLORS.teal, backgroundColor: 'rgba(42,157,143,.2)',
+            fill: true, tension: 0.3, pointRadius: 4, pointBackgroundColor: COLORS.teal
+        }]
+    },
+    options: {
+        ...defaultOpts,
+        plugins: { ...defaultOpts.plugins, title: { display: true, text: 'Autovalori del Laplaciano (primi 20)', color: '#ddd' } }
+    }
+});
+
+// --- Eigengaps chart ---
+const eigengaps = [0.00184,0.00090,0.00054,0.00108,0.00001,0.00024,0.00215,0.00062,0.00033,0.00047,0.00047,0.00295,0.00054,0.00156,0.00087,0.00137,0.00026,0.00097,0.00182,0.00062];
+const gapColors = eigengaps.map((v,i) => i === 11 ? COLORS.red : COLORS.orange);
+new Chart(document.getElementById('chart-eigengaps'), {
+    type: 'bar',
+    data: {
+        labels: eigengaps.map((_, i) => i + '-' + (i+1)),
+        datasets: [{
+            label: 'Eigengap',
+            data: eigengaps,
+            backgroundColor: gapColors,
+            borderColor: gapColors, borderWidth: 1
+        }]
+    },
+    options: {
+        ...defaultOpts,
+        plugins: {
+            ...defaultOpts.plugins,
+            title: { display: true, text: 'Eigengap (gap tra autovalori consecutivi)', color: '#ddd' },
+            annotation: {}
+        }
+    }
+});
+
+// --- Community sizes chart ---
+const commData = [
+    {id:11,size:5099},{id:2,size:3322},{id:1,size:2773},{id:7,size:2063},{id:13,size:1995},
+    {id:35,size:1753},{id:6,size:1655},{id:24,size:1413},{id:0,size:1377},{id:26,size:985},
+    {id:12,size:960},{id:21,size:826},{id:29,size:770},{id:5,size:696},{id:8,size:588},
+    {id:34,size:460},{id:17,size:416},{id:32,size:343},{id:33,size:298},{id:9,size:262}
+];
+new Chart(document.getElementById('chart-communities'), {
+    type: 'bar',
+    data: {
+        labels: commData.map(c => 'C' + c.id),
+        datasets: [{
+            label: 'Dimensione Comunità',
+            data: commData.map(c => c.size),
+            backgroundColor: commData.map((_, i) => i < 3 ? COLORS.red : i < 8 ? COLORS.orange : COLORS.teal),
+            borderWidth: 0
+        }]
+    },
+    options: {
+        ...defaultOpts,
+        plugins: {
+            ...defaultOpts.plugins,
+            title: { display: true, text: 'Top 20 Comunità per Dimensione (Analisi Spettrale)', color: '#ddd' }
+        }
+    }
+});
+
+// --- Dataset spatial distribution ---
+const dsData = [
+    { label: 'DataSet 1', x: 5.30, y: 13.04, r: 8, bg: COLORS.red },
+    { label: 'DataSet 9', x: 10.45, y: 4.35, r: 20, bg: COLORS.orange },
+    { label: 'DataSet 10', x: 11.37, y: 4.55, r: 16, bg: COLORS.teal },
+    { label: 'DataSet 11', x: 12.50, y: 7.76, r: 13, bg: COLORS.purple },
+];
+new Chart(document.getElementById('chart-dataset-spatial'), {
+    type: 'bubble',
+    data: {
+        datasets: dsData.map(d => ({
+            label: d.label,
+            data: [{ x: d.x, y: d.y, r: d.r }],
+            backgroundColor: d.bg + '66',
+            borderColor: d.bg, borderWidth: 2
+        }))
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { labels: { color: '#aaa', font: { size: 11 } } },
+            title: { display: true, text: 'Centroidi Dataset nello Spazio UMAP 2D', color: '#ddd' },
+        },
+        scales: {
+            x: { title: { display: true, text: 'UMAP X', color: '#888' }, ticks: { color: '#888' }, grid: { color: COLORS.grid } },
+            y: { title: { display: true, text: 'UMAP Y', color: '#888' }, ticks: { color: '#888' }, grid: { color: COLORS.grid } }
+        }
+    }
+});
+
+// --- PageRank top 15 ---
+const prTop = [
+    {id:'EFTA00743137',pr:0.00160},{id:'EFTA01011526',pr:0.00150},{id:'EFTA00742566',pr:0.00150},
+    {id:'EFTA00877324',pr:0.00142},{id:'EFTA00742101',pr:0.00134},{id:'EFTA01775840',pr:0.00132},
+    {id:'EFTA00877815',pr:0.00130},{id:'EFTA00743035',pr:0.00129},{id:'EFTA00743193',pr:0.00129},
+    {id:'EFTA01775720',pr:0.00128},{id:'EFTA00743194',pr:0.00126},{id:'EFTA01775534',pr:0.00126},
+    {id:'EFTA00743140',pr:0.00119},{id:'EFTA00877423',pr:0.00118},{id:'EFTA00742634',pr:0.00117}
+];
+new Chart(document.getElementById('chart-pagerank-top'), {
+    type: 'bar',
+    data: {
+        labels: prTop.map(d => d.id.slice(-6)),
+        datasets: [{
+            label: 'PageRank',
+            data: prTop.map(d => d.pr),
+            backgroundColor: COLORS.teal, borderWidth: 0
+        }]
+    },
+    options: {
+        ...defaultOpts,
+        indexAxis: 'y',
+        plugins: {
+            ...defaultOpts.plugins,
+            title: { display: true, text: 'Top 15 PageRank Score', color: '#ddd' }
+        }
+    }
+});
+
+// --- In-degree top 15 ---
+const idTop = [
+    {id:'EFTA01011526',deg:273},{id:'EFTA01775840',deg:231},{id:'EFTA01775720',deg:213},
+    {id:'EFTA01775534',deg:201},{id:'EFTA00743137',deg:196},{id:'EFTA00877324',deg:166},
+    {id:'EFTA00742566',deg:149},{id:'EFTA00742229',deg:142},{id:'EFTA00742634',deg:141},
+    {id:'EFTA00877815',deg:119},{id:'EFTA00743035',deg:118},{id:'EFTA00743143',deg:114},
+    {id:'EFTA00742217',deg:110},{id:'EFTA00742101',deg:109},{id:'EFTA00877423',deg:107}
+];
+new Chart(document.getElementById('chart-indegree-top'), {
+    type: 'bar',
+    data: {
+        labels: idTop.map(d => d.id.slice(-6)),
+        datasets: [{
+            label: 'In-Degree',
+            data: idTop.map(d => d.deg),
+            backgroundColor: COLORS.orange, borderWidth: 0
+        }]
+    },
+    options: {
+        ...defaultOpts,
+        indexAxis: 'y',
+        plugins: {
+            ...defaultOpts.plugins,
+            title: { display: true, text: 'Top 15 In-Degree (Documenti più Attrattivi)', color: '#ddd' }
+        }
+    }
+});
+</script>
+
+</body>
+</html>
