@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PARRHESEPSTEIN — "Snow White"</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #08080d; --surface: #10101a; --surface2: #181828;
+            --border: #252540; --accent: #e63946; --accent2: #f4a261;
+            --accent3: #2a9d8f; --text: #ddd; --dim: #777; --gold: #f1c40f;
+            --snow: #4a90d9;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-width:0; overflow-x:hidden; }
+
+        /* NAV */
+        .topnav {
+            background:#060609; border-bottom:1px solid var(--border);
+            padding:8px 20px; display:flex; gap:18px; align-items:center; font-size:.85em;
+        }
+        .topnav a { color:var(--dim); text-decoration:none; transition:color .2s; }
+        .topnav a:hover { color:var(--accent); }
+        .topnav a.active { color:#e63946; font-weight:bold; border-bottom:2px solid #e63946; padding-bottom:2px; }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg,#120808,#080812);
+            border-bottom: 3px solid var(--accent);
+            padding: 35px 40px 25px;
+            text-align: center;
+        }
+        .header .brand { font-size:.85em; letter-spacing:6px; color:var(--dim); text-transform:uppercase; }
+        .header h1 { font-size:2.6em; color:var(--accent); letter-spacing:3px; margin:4px 0; }
+        .header .term-label {
+            display:inline-block; margin-top:10px; padding:6px 24px;
+            background:rgba(230,57,70,.15); border:1px solid var(--accent);
+            border-radius:20px; font-size:1.3em; color:#ff6b6b; font-weight:bold;
+            letter-spacing:2px;
+        }
+        .header .subtitle { color:var(--dim); margin-top:8px; font-size:.95em; font-style:italic; }
+        .stats-bar { display:flex; justify-content:center; gap:30px; margin-top:20px; flex-wrap:wrap; }
+        .stat { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:10px 22px; text-align:center; }
+        .stat .n { font-size:1.9em; font-weight:bold; color:var(--accent2); }
+        .stat .l { font-size:.8em; color:var(--dim); }
+
+        .container { max-width:1650px; margin:0 auto; padding:20px 25px; width:100%; min-width:0; }
+
+        .section {
+            background:var(--surface); border:1px solid var(--border);
+            border-radius:10px; padding:22px; margin-bottom:22px;
+        }
+        .section h2 { color:var(--accent2); font-size:1.3em; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:8px; }
+
+        /* KEY EVIDENCE */
+        .evidence-box {
+            background:var(--surface2); border-left:4px solid var(--accent);
+            border-radius:0 8px 8px 0; padding:16px 18px; margin-bottom:14px;
+        }
+        .evidence-box .ev-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px; }
+        .evidence-box .ev-head h4 { color:var(--accent); font-size:.95em; }
+        .evidence-box .ev-head .ev-date { color:var(--dim); font-size:.8em; }
+        .evidence-box .ev-quote { font-style:italic; color:#ccc; line-height:1.6; font-size:.9em; border-left:3px solid var(--border); padding-left:12px; margin:8px 0; }
+        .evidence-box .ev-quote .hl { background:rgba(230,57,70,.3); color:#ff6b6b; font-weight:bold; padding:1px 4px; border-radius:2px; font-style:normal; }
+        .evidence-box .ev-analysis { font-size:.85em; color:var(--accent2); margin-top:6px; }
+        .evidence-box .ev-docs { font-size:.78em; color:var(--dim); margin-top:4px; }
+        .evidence-box .ev-docs a { color:var(--accent3); text-decoration:none; font-family:monospace; }
+        .evidence-box .ev-docs a:hover { text-decoration:underline; }
+
+        /* CATEGORY CARDS */
+        .cat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; }
+        .cat-card {
+            background:var(--surface2); border-left:4px solid var(--accent);
+            border-radius:0 8px 8px 0; padding:14px;
+        }
+        .cat-card h4 { font-size:.95em; margin-bottom:3px; }
+        .cat-card .cnt { font-size:1.8em; font-weight:bold; }
+        .cat-card .pct { font-size:.8em; color:var(--dim); }
+
+        /* CHARTS */
+        .charts { display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-bottom:22px; }
+        .cbox { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px; min-width:0; overflow:hidden; }
+        .cbox h3 { color:var(--accent2); font-size:1em; margin-bottom:8px; }
+        .cbox canvas { max-height:280px; width:100% !important; }
+
+        /* PATTERNS */
+        .pat-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+        .pat { background:var(--surface2); padding:14px; border-radius:8px; }
+        .pat h4 { color:var(--accent2); margin-bottom:6px; font-size:.95em; }
+        .pat p { font-size:.88em; line-height:1.5; }
+        .pat .num { color:var(--accent); font-weight:bold; font-size:1.1em; }
+
+        /* TIMELINE */
+        .timeline { position:relative; padding-left:30px; }
+        .timeline::before { content:''; position:absolute; left:12px; top:0; bottom:0; width:2px; background:var(--border); }
+        .tl-item { position:relative; margin-bottom:20px; }
+        .tl-item::before { content:''; position:absolute; left:-22px; top:6px; width:10px; height:10px; border-radius:50%; background:var(--accent); border:2px solid var(--bg); }
+        .tl-item.critical::before { background:var(--accent); box-shadow:0 0 8px rgba(230,57,70,.5); }
+        .tl-date { font-size:.8em; color:var(--accent2); font-weight:bold; }
+        .tl-content { font-size:.88em; line-height:1.5; margin-top:3px; }
+        .tl-content .hl { background:rgba(230,57,70,.3); color:#ff6b6b; font-weight:bold; padding:1px 4px; border-radius:2px; }
+
+        /* FILTERS */
+        .filters { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; align-items:center; }
+        .filters input,.filters select {
+            background:var(--surface2); border:1px solid var(--border); color:var(--text);
+            padding:7px 12px; border-radius:5px; font-size:.9em;
+        }
+        .filters input { width:280px; }
+        .rcount { color:var(--dim); font-size:.85em; margin-bottom:8px; }
+
+        /* TABLE */
+        .twrap { overflow-x:auto; width:100%; }
+        .section { min-width:0; overflow:hidden; }
+        table { width:100%; border-collapse:collapse; font-size:.85em; }
+        th {
+            background:var(--surface2); color:var(--accent2); padding:10px 8px;
+            text-align:left; position:sticky; top:0; cursor:pointer; white-space:nowrap; user-select:none;
+        }
+        th:hover { color:var(--accent); }
+        td { padding:9px 8px; border-bottom:1px solid var(--border); vertical-align:top; }
+        tr:hover { background:rgba(230,57,70,.04); }
+        .dlink { color:var(--accent3); text-decoration:none; font-family:monospace; font-weight:bold; font-size:.9em; }
+        .dlink:hover { text-decoration:underline; }
+        .ctx { max-width:600px; font-size:.88em; line-height:1.4; }
+        .hl { background:rgba(230,57,70,.3); color:#ff6b6b; font-weight:bold; padding:1px 3px; border-radius:2px; }
+        .badge {
+            display:inline-block; padding:2px 7px; border-radius:3px;
+            font-size:.75em; font-weight:bold; white-space:nowrap;
+        }
+        .b-sex { background:rgba(230,57,70,.2); color:#e63946; }
+        .b-leg { background:rgba(244,162,97,.2); color:#f4a261; }
+        .b-typ { background:rgba(42,157,143,.2); color:#2a9d8f; }
+        .b-moc { background:rgba(155,89,182,.2); color:#9b59b6; }
+        .b-ctl { background:rgba(231,76,60,.2); color:#e74c3c; }
+        .b-mun { background:rgba(127,140,141,.2); color:#95a5a6; }
+        .b-bok { background:rgba(52,152,219,.2); color:#3498db; }
+        .b-unk { background:rgba(100,100,100,.2); color:#888; }
+        .b-pos { background:rgba(39,174,96,.2); color:#27ae60; }
+        .b-neg { background:rgba(192,57,43,.2); color:#c0392b; }
+        .b-neu { background:rgba(127,140,141,.2); color:#7f8c8d; }
+        .b-code { background:rgba(230,57,70,.2); color:#e63946; }
+        .b-film { background:rgba(244,162,97,.2); color:#f4a261; }
+        .b-maint { background:rgba(42,157,143,.2); color:#2a9d8f; }
+        .b-laundry { background:rgba(155,89,182,.2); color:#9b59b6; }
+        .b-product { background:rgba(52,152,219,.2); color:#3498db; }
+        .b-art { background:rgba(241,196,15,.2); color:#f1c40f; }
+        .b-other { background:rgba(100,100,100,.2); color:#888; }
+
+        .pag { display:flex; justify-content:center; gap:6px; margin-top:12px; }
+        .pag button {
+            background:var(--surface2); border:1px solid var(--border); color:var(--text);
+            padding:5px 12px; border-radius:4px; cursor:pointer; font-size:.85em;
+        }
+        .pag button.on { background:var(--accent); border-color:var(--accent); }
+        .pag button:hover { border-color:var(--accent); }
+
+        .footer { text-align:center; padding:30px; color:var(--dim); font-size:.8em; border-top:1px solid var(--border); margin-top:30px; }
+
+        @media(max-width:900px) {
+            .charts,.pat-grid { grid-template-columns:1fr; }
+            .header { padding:20px 15px 18px; }
+            .header h1 { font-size:1.6em; }
+            .container { padding:12px 10px; }
+            .filters { flex-direction:column; }
+            .filters input,.filters select { width:100%; }
+        }
+
+        @media(max-width:768px) {
+            .header { padding:16px 12px 14px; }
+            .header .brand { font-size:.7em; letter-spacing:3px; }
+            .header h1 { font-size:1.4em; letter-spacing:1px; }
+            .header .term-label { font-size:1em; padding:4px 16px; }
+            .stats-bar { gap:6px; }
+            .stat { padding:6px 10px; flex:1; min-width:70px; }
+            .stat .n { font-size:1.2em; }
+            .stat .l { font-size:.68em; }
+            .section { padding:14px 10px; margin-bottom:14px; }
+            .section h2 { font-size:1.1em; }
+            .cat-grid { grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:8px; }
+            .cat-card { padding:10px; }
+            .cat-card .cnt { font-size:1.4em; }
+            .cbox { padding:12px; }
+            .cbox canvas { max-height:220px; }
+            .pat { padding:10px; }
+            .pat p { font-size:.82em; }
+            .timeline { padding-left:22px; }
+
+            table thead { display:none; }
+            table, table tbody { display:block; width:100%; }
+            table tr {
+                display:grid; grid-template-columns:1fr 1fr;
+                background:var(--surface2); border:1px solid var(--border);
+                border-radius:12px; margin-bottom:14px;
+                overflow:hidden;
+            }
+            table tr:hover { background:var(--surface2); }
+            table td {
+                display:block; padding:8px 14px; border-bottom:none; font-size:.85em;
+            }
+            table td::before {
+                content:attr(data-label);
+                display:block; font-size:.65em; font-weight:700;
+                color:var(--accent2); text-transform:uppercase;
+                letter-spacing:.8px; margin-bottom:2px; opacity:.85;
+            }
+            table td:nth-child(1) { display:none; }
+            table td:nth-child(2) {
+                grid-column:1/-1;
+                background:rgba(42,157,143,.08); border-bottom:1px solid var(--border);
+                padding:10px 14px;
+            }
+            table td:nth-child(2)::before { color:var(--accent3); }
+            table td:nth-child(2) .dlink { font-size:1em; }
+            table td:nth-child(3) { grid-column:1; }
+            table td:nth-child(4) { grid-column:2; }
+            table td:nth-child(5) { grid-column:1; }
+            table td:nth-child(6) { grid-column:2; }
+            table td:nth-child(7) {
+                grid-column:1/-1; padding:6px 14px;
+                display:flex; align-items:center; gap:8px;
+                border-top:1px solid rgba(255,255,255,.04);
+            }
+            table td:nth-child(7)::before { display:inline; margin-bottom:0; }
+            table td:nth-child(8) {
+                grid-column:1/-1;
+                background:rgba(0,0,0,.15); border-top:1px solid var(--border);
+                padding:10px 14px;
+            }
+            .ctx { max-width:100%; font-size:.82em; line-height:1.6; word-break:break-word; }
+            .twrap { overflow-x:visible; }
+            .pag { flex-wrap:wrap; gap:4px; }
+            .pag button { padding:10px 16px; font-size:.9em; min-width:44px; min-height:44px; border-radius:6px; }
+            .footer { padding:20px 10px; font-size:.72em; }
+        }
+
+        @media(max-width:480px) {
+            .header { padding:12px 10px 12px; }
+            .header .brand { font-size:.62em; letter-spacing:2px; }
+            .header h1 { font-size:1.15em; }
+            .header .term-label { font-size:.9em; padding:3px 12px; margin-top:6px; }
+            .stats-bar { flex-wrap:wrap; gap:4px; justify-content:center; }
+            .stat { padding:5px 8px; min-width:60px; }
+            .stat .n { font-size:1em; }
+            .stat .l { font-size:.6em; }
+            .container { padding:8px 6px; }
+            .section { padding:10px 8px; border-radius:8px; }
+            .cat-grid { grid-template-columns:1fr 1fr; gap:6px; }
+            .cat-card .cnt { font-size:1.2em; }
+            .cbox canvas { max-height:180px; }
+            .filters input,.filters select { font-size:.85em; padding:10px; }
+            table tr { margin-bottom:10px; border-radius:10px; }
+            table td { font-size:.8em; padding:6px 10px; }
+            table td:nth-child(2) { padding:8px 10px; }
+            table td:nth-child(8) { padding:8px 10px; }
+            table td::before { font-size:.6em; }
+            .ctx { font-size:.75em; line-height:1.5; }
+            .pag button { padding:8px 12px; font-size:.82em; min-width:40px; min-height:40px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="topnav">
+    <a href="index.html">Analisi "Whoops"</a>
+    <a href="snow-white.html" class="active">Analisi "Snow White"</a>
+</nav>
+
+<div class="header">
+    <div class="brand">Jeffrey Epstein Declassified Documents — Word Analysis</div>
+    <h1>PARRHESEPSTEIN</h1>
+    <div class="term-label">"SNOW WHITE"</div>
+    <div class="subtitle">Analisi dell'uso di nomi Disney come possibili nomi in codice per vittime</div>
+    <div class="stats-bar">
+        <div class="stat"><div class="n" id="sTotal">—</div><div class="l">Occorrenze</div></div>
+        <div class="stat"><div class="n" id="sDocs">—</div><div class="l">Documenti unici</div></div>
+        <div class="stat"><div class="n" id="sCode">—</div><div class="l">Uso come codice</div></div>
+        <div class="stat"><div class="n" id="sYears">—</div><div class="l">Arco temporale</div></div>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- KEY EVIDENCE -->
+    <div class="section">
+        <h2>Prove chiave — Uso come nome in codice</h2>
+
+        <div class="evidence-box">
+            <div class="ev-head">
+                <h4>Lo scambio Jes Staley &harr; Jeffrey Epstein</h4>
+                <span class="ev-date">9-10 Luglio 2010</span>
+            </div>
+            <div class="ev-quote">
+                <strong>Staley:</strong> "Maybe they're tracking u?? That was fun. Say hi to <span class="hl">Snow White</span>."<br>
+                <strong>Epstein:</strong> "[W]hat character would you like next?"<br>
+                <strong>Staley:</strong> "Beauty and the Beast"<br>
+                <strong>Epstein:</strong> "well one side is available."
+            </div>
+            <div class="ev-analysis">La frase "what character would you like next" implica un catalogo di persone identificate con nomi di personaggi Disney. "One side is available" suggerisce disponibilita di una persona.</div>
+            <div class="ev-docs">~13 copie: <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00145666.pdf" target="_blank">EFTA00145666</a> (riassunto giudiziario) |
+            <a href="https://www.justice.gov/epstein/files/DataSet%2010/EFTA01300650.pdf" target="_blank">EFTA01300650</a> |
+            <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00741535.pdf" target="_blank">EFTA00741535</a></div>
+        </div>
+
+        <div class="evidence-box">
+            <div class="ev-head">
+                <h4>Email di "Selena P" a Epstein</h4>
+                <span class="ev-date">10 Luglio 2010</span>
+            </div>
+            <div class="ev-quote">
+                "the <span class="hl">snow white</span> was f..ed twice as soon as she put her costume))"
+            </div>
+            <div class="ev-analysis">Riferimento esplicito a violenza sessuale su una persona identificata come "Snow White". Il tono e la doppia parentesi indicano complicita e normalizzazione.</div>
+            <div class="ev-docs"><a href="https://www.justice.gov/epstein/files/DataSet%2011/EFTA02410216.pdf" target="_blank">EFTA02410216</a> |
+            <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00741531.pdf" target="_blank">EFTA00741531</a></div>
+        </div>
+
+        <div class="evidence-box">
+            <div class="ev-head">
+                <h4>Epstein chiede foto in costume Snow White</h4>
+                <span class="ev-date">20 Giugno 2010</span>
+            </div>
+            <div class="ev-quote">
+                "brett ratner, is going to film a big movie, <span class="hl">Snow White</span>, i would love to take photos of you in a <span class="hl">snow white</span> costume. you can get it from the costume store"
+            </div>
+            <div class="ev-analysis">Epstein usa il pretesto del film di Brett Ratner per chiedere foto in costume. La destinataria aveva appena ricevuto "feedback from audition" — profilo di giovane aspirante attrice.</div>
+            <div class="ev-docs">~6 copie: <a href="https://www.justice.gov/epstein/files/DataSet%2010/EFTA01815151.pdf" target="_blank">EFTA01815151</a> |
+            <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00735698.pdf" target="_blank">EFTA00735698</a> |
+            <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00746255.pdf" target="_blank">EFTA00746255</a></div>
+        </div>
+
+        <div class="evidence-box">
+            <div class="ev-head">
+                <h4>Epstein: "snow white? now what?"</h4>
+                <span class="ev-date">4 Novembre 2009</span>
+            </div>
+            <div class="ev-quote">
+                "<span class="hl">snow white</span>? now what?"
+            </div>
+            <div class="ev-analysis">Messaggio criptico. Il tono interrogativo + "now what?" suggerisce che "Snow White" identifica una situazione o persona, non il film Disney.</div>
+            <div class="ev-docs"><a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00741563.pdf" target="_blank">EFTA00741563</a> |
+            <a href="https://www.justice.gov/epstein/files/DataSet%2010/EFTA01820519.pdf" target="_blank">EFTA01820519</a></div>
+        </div>
+
+        <div class="evidence-box">
+            <div class="ev-head">
+                <h4>Email con subject "Snow white" + foto allegata</h4>
+                <span class="ev-date">4 Novembre 2009</span>
+            </div>
+            <div class="ev-quote">
+                Subject: <span class="hl">Snow white</span><br>
+                Attachments: IMG00358.jpg<br>
+                "Hi...well Halloween was ok...my first one ever in NY..."
+            </div>
+            <div class="ev-analysis">Una persona scrive a Epstein con subject "Snow white" allegando foto. Il costume di Halloween potrebbe essere stato il costume "Snow White" richiesto da Epstein.</div>
+            <div class="ev-docs"><a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00768202.pdf" target="_blank">EFTA00768202</a></div>
+        </div>
+
+        <div class="evidence-box">
+            <div class="ev-head">
+                <h4>"I watched Snow White..." con foto allegate a "JE Jail"</h4>
+                <span class="ev-date">Giugno 2012</span>
+            </div>
+            <div class="ev-quote">
+                To: JE Jail &lt;jeevacation@gmail.com&gt;<br>
+                Attachments: White.jpg; black.jpg<br>
+                "I watched <span class="hl">Snow White</span>..."
+            </div>
+            <div class="ev-analysis">Inviata all'indirizzo "JE Jail" di Epstein. "I watched Snow White" con foto allegate puo essere un doppio senso: il film O una persona identificata con quel nome. Nota: "Nadia" scrive a "Sarah K" con la stessa email identica.</div>
+            <div class="ev-docs"><a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA01178223.pdf" target="_blank">EFTA01178223</a> |
+            <a href="https://www.justice.gov/epstein/files/DataSet%2011/EFTA02699549.pdf" target="_blank">EFTA02699549</a> |
+            <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00547674.pdf" target="_blank">EFTA00547674</a></div>
+        </div>
+    </div>
+
+    <!-- TIMELINE -->
+    <div class="section">
+        <h2>Timeline degli eventi chiave</h2>
+        <div class="timeline">
+            <div class="tl-item critical">
+                <div class="tl-date">4 Novembre 2009</div>
+                <div class="tl-content">Epstein invia email: "<span class="hl">snow white</span>? now what?" — primo riferimento criptico al nome</div>
+            </div>
+            <div class="tl-item critical">
+                <div class="tl-date">4 Novembre 2009</div>
+                <div class="tl-content">Risposta con subject "<span class="hl">Snow white</span>" + foto allegata (IMG00358.jpg): "Hi...well Halloween was ok..."</div>
+            </div>
+            <div class="tl-item critical">
+                <div class="tl-date">20 Giugno 2010</div>
+                <div class="tl-content">Epstein a giovane donna: "brett ratner is going to film <span class="hl">Snow White</span>, i would love to take photos of you in a snow white costume"</div>
+            </div>
+            <div class="tl-item">
+                <div class="tl-date">9 Luglio 2010, 18:57</div>
+                <div class="tl-content">Email a Epstein con subject: "<span class="hl">Snow white</span>" (EFTA02410262)</div>
+            </div>
+            <div class="tl-item critical">
+                <div class="tl-date">9 Luglio 2010, 20:45</div>
+                <div class="tl-content"><strong>Jes Staley</strong> a Epstein: "That was fun. Say hi to <span class="hl">Snow White</span>."</div>
+            </div>
+            <div class="tl-item critical">
+                <div class="tl-date">9 Luglio 2010, 21:02</div>
+                <div class="tl-content"><strong>Epstein</strong> risponde: "what character would you like next" — implica sistema di nomi in codice Disney</div>
+            </div>
+            <div class="tl-item critical">
+                <div class="tl-date">10 Luglio 2010, 00:36</div>
+                <div class="tl-content"><strong>Selena P</strong> a Epstein: "the <span class="hl">snow white</span> was f..ed twice as soon as she put her costume))"</div>
+            </div>
+            <div class="tl-item">
+                <div class="tl-date">26 Giugno 2012</div>
+                <div class="tl-content">Email a "JE Jail": "I watched <span class="hl">Snow White</span>..." con foto allegate (White.jpg, black.jpg)</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CATEGORIES -->
+    <div class="section"><h2>Classificazione semantica</h2><div class="cat-grid" id="catGrid"></div></div>
+
+    <div class="charts">
+        <div class="cbox"><h3>Distribuzione categorie</h3><canvas id="cCat"></canvas></div>
+        <div class="cbox"><h3>Per Dataset</h3><canvas id="cDs"></canvas></div>
+        <div class="cbox"><h3>Mittenti principali</h3><canvas id="cSend"></canvas></div>
+        <div class="cbox"><h3>Uso come codice vs innocuo</h3><canvas id="cCode"></canvas></div>
+    </div>
+
+    <!-- PATTERNS -->
+    <div class="section">
+        <h2>Pattern linguistici</h2>
+        <div class="pat-grid" id="patBox"></div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="section">
+        <h2>Tabella completa</h2>
+        <div class="filters">
+            <input type="text" id="fSearch" placeholder="Cerca nel testo...">
+            <select id="fCat"><option value="">Tutte le categorie</option></select>
+            <select id="fSend"><option value="">Tutti i mittenti</option></select>
+            <select id="fDs"><option value="">Tutti i dataset</option></select>
+        </div>
+        <div class="rcount" id="rcount"></div>
+        <div class="twrap">
+            <table>
+                <thead><tr>
+                    <th data-s="i">#</th><th data-s="doc_id">Doc ID</th><th data-s="dataset">Dataset</th>
+                    <th data-s="sender">Mittente</th><th data-s="year">Anno</th>
+                    <th data-s="cat">Categoria</th><th data-s="sentiment">Rilevanza</th><th>Contesto</th>
+                </tr></thead>
+                <tbody id="tbody"></tbody>
+            </table>
+        </div>
+        <div class="pag" id="pag"></div>
+    </div>
+</div>
+
+<div class="footer">
+    PARRHESEPSTEIN &mdash; Dati estratti da DOJ Declassified Documents &mdash;
+    FTS su 82 occorrenze in 66 documenti &mdash;
+    <a href="https://www.justice.gov/epstein" style="color:var(--accent3)">justice.gov/epstein</a>
+</div>
+
+<script>
+const RAW = [{"doc_id":"EFTA01300650","dataset":"DataSet_10","text":"From:  Jes Staley < To:  'jeevacation@gmail.com' <ieevacation@gmail.corn>  Sent:  7/10/2010 1:45:06 AM  Subject:  Maybe they're tracking u??  That was fun. Say hi to Snow White.  SDNY_GM_00077821  Confidential Treatment Requested by JPMorgan Chase  JPM-SDNY-00000948  EFTA_OOl 88290  EFTA01300650"},{"doc_id":"EFTA01300651","dataset":"DataSet_10","text":": Jes Staley  Sent: Fri Jul 09 21:02:03 2010  Subject: Re:  what character would you like next  On Fri, Jul 9, 2010 at 8:45 PM, Jes Staley  wrote:  Maybe they're tracking u??  That was fun. Say hi to Snow White.  This email is confidential and subject to important disclaimers and  conditions including on offers for the purchase or sale of  securities, accuracy and completeness of information, viruses,  conf"},{"doc_id":"EFTA01300652","dataset":"DataSet_10","text":"Jes Staley  Sent: Fri Jul 09 21:02:03 2010  Subject: Re:  what character would you like next  On Fri, Jul 9, 2010 at 8:45 PM, Jes Staley a  wrote:  Maybe they're tracking u??  That was fun. Say hi to Snow White.  This email is confidential and subject to important disclaimers and  conditions including on offers for the purchase or sale of  securities, accuracy and completeness of information, viruses,  conf"},{"doc_id":"EFTA01304988","dataset":"DataSet_10","text":"ash all new towels and linen before use.  \u2022 Rotate your towels and sheets so as not to wear them out.  \u25a0  Worn towels should be transferred to staff quarters for staff use.  \u2022 Bed linens are taken to Snow White Laundry.  \u2022 Clothes that require dry cleaning are taken to Spartan Cleaners. If the garment is  stained, be sure to show the cleaner where it is soiled, mentioning what you think  the stain is. When"},{"doc_id":"EFTA01709600","dataset":"DataSet_10","text":", Walt Disney was successful.  But Disney didn't want to make only short cartoons. He wanted  to make a full length animated film. He settled down to work and  made the first long cartoon movie ever: Snow White and the Seven  Dwarfs. He hired talented people to help him make the thousands  of drawings needed for the movie. It was a hit. Walt Disney then  made more long cartoons: Pinocchio, Fantasia, Dumbo,"},{"doc_id":"EFTA01709600","dataset":"DataSet_10","text":"to each question and fill in the  bubble beside the answer you choose. Or, write your answer on the  lines.  16. What happened first?  C) Walt Disney drew cartoons in his garage.  \u00ae Walt Disney made Snow White and the Seven Dwarfs.  41 Walt Disney's family moved to a farm in Missouri.  (1) Walt Disney created Mary Poppins.  17. Just after Walt Disney became successful at last, he wanted to:  C) create Mick"},{"doc_id":"EFTA01709600","dataset":"DataSet_10","text":"Walt Disney became successful at last, he wanted to:  C) create Mickey Mouse.  C) open an amusement park.  6 make full-length animated films.  \u00ae print his cartoons in the newspaper.  18. Describe how Snow White and the Seven Dwarfs is different from the  cartoons Walt Disney had made before.  Nat,)  ci(t5  ck-r(4 ii  ,c1,1*19 co:ma -ten' 't I M I (tar{  -his  rnr-f-onas bacq,  wra2 short  CQr lc 000 s_  19."},{"doc_id":"EFTA01709600","dataset":"DataSet_10","text":"5. His company today employs many people and continues to make  imaginative movies like Beauty and the Beast and The Little Mermaid.  \u00ae Talks to  \u2022  Gives jobs to  \u00ae Draws  \u00ae Interests  26. The movie Snow White and the Seven Dwarfs was a hit.  \u00ae A slap  et  To ask  A success  \u00ae To strike a ball  Grade 4 \u2022 End-of-Year Test  15  EFTA01709654  DIRECTIONS. Choose the word that has the same meaning as the underl"},{"doc_id":"EFTA01734868","dataset":"DataSet_10","text":"ghtning strike inspection  Total Labor  Material (Consumables)  Quantity  Unit Description  Part No.  0.946  LI  CATALYST/HARDENER PER US  571.081  1  EA  CATALYST PER US QUART.  571.082  5  L  PAINT SNOW WHITE EXPRESS  CM0840102  1  EA  DEGREASING AGENT,QUICK,VC  CW201 0.5 (11320)  6  EA  BOLT  GAB511GA3-10  3  EA  BOLTS  GAB511GA3-12  50  EA  SCREW  GAB511GA3-5  5  EA  SCREW  GAB511GA3-7  2  EA  BOLT  GAB"},{"doc_id":"EFTA01734868","dataset":"DataSet_10","text":"hanic Normal Time  Total Labor  flaterial (Consumables)  kiantity  Unit Description  Part No.  4  PCK  SANDING DISK,MIRKA ABRANE  102032 KORN 1500  2  EA  FILM,RED,TESA,19MM  4104-19  3.785  L  PAINT SNOW WHITE  570-566  1  EA  PAD,POLISHING,SUPERBUFF,2  60-4300.5009-0  12  ROL TAPE,MASKING  6280/50  4  EA  CLEANING RAGS MICROFIBER,  71.03.01  1  EA  CLEANE R,SPRAY,MS-260  M5260  MISC. SMALL PARTS  Total Ma"},{"doc_id":"EFTA01813818","dataset":"DataSet_10","text":": Jes Staley  Sent: Fri Jul 09 21:02:03 2010  Subject: Re:  what character would you like next  On Fri, Jul 9, 2010 at 8:45 PM, Jes Staley  wrote:  Maybe they're tracking u??  That was fun. Say hi to Snow White.  This email is confidential and subject to important disclaimers and  conditions including on offers for the purchase or sale of  securities, accuracy and completeness of information, viruses,  conf"},{"doc_id":"EFTA01815151","dataset":"DataSet_10","text":"To:  Fran:  Jeffrey Epstein  Sent  Sun 6/20/2010 11:28:21 PM  Subject Re:  brett ratner ,is going to film a big movie\u201e Snow White, i would love to take photos of you in a  snow white costume. you can get it from the costume store  On Sun, Jun 20, 2010 at 6:13 PM,  wrote:  Got feedback from audition! Students want to film me!! I"},{"doc_id":"EFTA01815151","dataset":"DataSet_10","text":"To:  Fran:  Jeffrey Epstein  Sent  Sun 6/20/2010 11:28:21 PM  Subject Re:  brett ratner ,is going to film a big movie\u201e Snow White, i would love to take photos of you in a  snow white costume. you can get it from the costume store  On Sun, Jun 20, 2010 at 6:13 PM,  wrote:  Got feedback from audition! Students want to film me!! In Will call u tmw, still in hampons)  Miss Uuuuu  Sen"},{"doc_id":"EFTA01815523","dataset":"DataSet_10","text":"y Epstein  Sent  Sat 7/10/2010 1:02:03 AM  Subject: Re:  what character would you like next  On Fri, Jul 9, 2010 at 8:45 PM, Jes Staley \u2039 > wrote:  Maybe they're tracking u??  That was fun. Say hi to Snow White.  This email is confidential and subject to important disclaimers and  conditions including on offers for the purchase or sale of  securities, accuracy and completeness of information, viruses,  conf"},{"doc_id":"EFTA01820519","dataset":"DataSet_10","text":"To:  From:  Jeffrey Epstein  Sent  Wed 11/4/2009 7:14:58 AM  snow white? now what?  ***********************************************************  The information contained in this communication is  confidential, may be attorney-client privileged, may  constitute inside in"},{"doc_id":"EFTA01911631","dataset":"DataSet_10","text":"evacation@gmaii corn)  From:  Sent  Mon 7/28/2014 6:10:24 AM  Subject: See you soon! :)  Sad News  CNN reported today that Walt Disney's new film  called \"Jet Black,\" the African-American version of \"Snow White\" has been cancelled. All  of the 7 dwarfs: Dealer, Stealer, Mugger, Forger, Drive By, Homeboy, and Shank  have refused to sing \"Hi Ho, Hi Ho\" because they  say it offends black prostitutes. They also"},{"doc_id":"EFTA01915458","dataset":"DataSet_10","text":"Not Fade Away  Paramount  On the Road  IFC  Not available  Paranorman  Focus Features  Perks of Being a Wallflower  Summit  Promised Land  Madagascar 3  Paramount  Moonrise Kingdom  Focus Features  Snow White and the  Huntsman  Universal  Quartet  TWC  Rust and Bone  Sony Pictures Classics  Searching for Sugarman  Sony Pictures Classics  Show Stopper  Smashed  Sony Pictures Classics  Stand Up Guys  Lionsg"},{"doc_id":"EFTA02310619","dataset":"DataSet_11","text":"From:  Sent:  Tuesday, June 26, 2012 3:33 PM  To:  Attachments:  lunchajpg; White.jpg  Hey K.  I am not in NYC. Not sure when I'll be back yet. I have new hair again. I watched Snow White and this is what  happened... :) How are you doing?  1  EFTA_R1_01194666  EFTA02310619"},{"doc_id":"EFTA02410216","dataset":"DataSet_11","text":"To:  Jeffreyljeevacation\u00a9gmail.com]  From:  Selena P  Sent  Sat 7/10/2010 12:36:29 AM  the snow white was f..ed twice as soon as she put her costume))  EFTA_R1_01470851  EFTA02410216"},{"doc_id":"EFTA02410253","dataset":"DataSet_11","text":"es Staley  Sent: RI Jul 09 21:02:03 2010  Subject: Re:  what character would you like next  On Fri, Jul 9, 2010 at 8:45 PM, Jes Staley gt \u2022 wrote:  Maybe they're tracking u??  That was fun. Say hi to Snow White.  This email is confidential and subject to important disclaimers and  conditions including on offers for the purchase or sale of  securities, accuracy and completeness of information, viruses,  conf"},{"doc_id":"EFTA02410262","dataset":"DataSet_11","text":"To:  Jeffrey Eosteinpeevacation@gmail.com]  From:  Sent:  Subject:  Snow white  Fri 7/9/2010 6:57:23 PM  EFTA_R1_01470925  EFTA02410262"},{"doc_id":"EFTA02411688","dataset":"DataSet_11","text":"Will get it!  Sent via BlackBerry from T-Mobile  From: Jeffrey Epstein <jeevacation\u00aegmail.com>  Date: Sun, 20 Jun 2010 19:28:21 -0400  To:  Subject: Re:  brett rattier ,is going to film a big movie\u201e Snow White, i would love to take photos of you in a  snow white costume. you can get it from the costume store  On Sun, Jun 20, 2010 at 6:13 PM,  wrote:  Got feedback from audition! Students want to film mew!!"},{"doc_id":"EFTA02411688","dataset":"DataSet_11","text":"m: Jeffrey Epstein <jeevacation\u00aegmail.com>  Date: Sun, 20 Jun 2010 19:28:21 -0400  To:  Subject: Re:  brett rattier ,is going to film a big movie\u201e Snow White, i would love to take photos of you in a  snow white costume. you can get it from the costume store  On Sun, Jun 20, 2010 at 6:13 PM,  wrote:  Got feedback from audition! Students want to film mew!!  Will call u tmw, still in hampons)  Miss Uuuuu  Sent"},{"doc_id":"EFTA02530600","dataset":"DataSet_11","text":"From:  Sent:  To:  Subject:  Jeffrey Epstein <jeevacation@gmail.com>  Sunday, June 20, 2010 11:28 PM  Re:  brett ratner ,is going to film a big movie\u201e Snow White, i would love to =ake photos of you in a snow white costume.  you can get it from the cost=me store  On Sun, Jun 20, 2010 at 6:13 PM=  > wrote:  Got feedback from audition! Students want t= film me'"},{"doc_id":"EFTA02530600","dataset":"DataSet_11","text":"m:  Sent:  To:  Subject:  Jeffrey Epstein <jeevacation@gmail.com>  Sunday, June 20, 2010 11:28 PM  Re:  brett ratner ,is going to film a big movie\u201e Snow White, i would love to =ake photos of you in a snow white costume.  you can get it from the cost=me store  On Sun, Jun 20, 2010 at 6:13 PM=  > wrote:  Got feedback from audition! Students want t= film me' l I II  Will call u tmw, still in hampons)  Miss Uuu"},{"doc_id":"EFTA02577202","dataset":"DataSet_11","text":"Openness  <1=0> Gray White  5% Openness  Mocha  5% Openness  White  5% Openness  Alpaca  5% Openness  3  EFTA_R1_01749717  EFTA02577204  </=Ft>  And the 10% open:  Beige  10% Openness  (119\" Wides=  Snow White  10% Openness  (119\" =ides)  Gray  10% Openness  (96\" Wide.  s)=/SPAN>  Buckwheat  10% Openness  (119\" W=des)  Chestnut  10% Openness  (119\" Wi=es)  Ebony  10% Openness  (119\" Wide=  4  EFTA_R1_01749"},{"doc_id":"EFTA02699549","dataset":"DataSet_11","text":"From:  Sent:  ues ay, June  ,  1  :  To:  JE Jail  Attachments:  White.jpg; black.jpg  I watched Snow White...  1  EFTA_R1_02062214  EFTA02699549"},{"doc_id":"EFTA02706892","dataset":"DataSet_11","text":"Peter Brant  The Sessions  Fox Searchlight  Silver Linings Playbook  (5 copies)  TWC  Samantha Boardman  Peggy has three  Dixon Boardman  Skyfall  Sony  Earle Mack  Smashed  Sony Pictures Classics  Snow White and the  Huntsman  Universal  Stand Up Guys  Lionsgate  Ted  Universal  To Rome with Love  Sony Pictures Classics  Emilia Fanjul  This is 40  Universal  Quentin Schaffer  Samantha Boardman wants  to"},{"doc_id":"EFTA02714615","dataset":"DataSet_11","text":"imary structural components and amenities built using  West System construction methods.  Exterior/Salon Finish  \u2022 Dupont polyurethane paint system  \u2022  Commercial yacht finish  Paint and Graphics  \u2022  Snow White topsides and cabin  \u2022  Light grey window stripe and nonskid  \u2022  2 Coats Islands 77 bottom paint, 3 on waterline  \u2022 4\" Name and hailing port on aft beam  \u2022 4\" Name on port and starboard bows  ACCOMMOD"},{"doc_id":"EFTA00029432","dataset":"DataSet_8","text":"es Staley  Sent: Fri Jul 09 21:02:03 2010  Subject: Re:  what character would you like next  On Fri, Jul 9, 2010 at 8:45 PM, Jes Staley e > wrote:  Maybe they're tracking u??  That was fun. Say hi to Snow White.  This email is confidential and subject to important disclaimers and  conditions including on offers for the purchase or sale of  securities, accuracy and completeness of information, viruses,  conf"},{"doc_id":"EFTA00066093","dataset":"DataSet_9","text":"Wash all new towels and linen before use.  \u2022 Rotate your towels and sheets so as not to wear them out.  \u2022 Worn towels should be transferred to staff quarters for staff use.  \u2022 Bed linens are taken to Snow White Laundry.  \u2022 Clothes that require dry cleaning are taken to Spartan Cleaners. If the garment is  stained, be sure to show the cleaner where it is soiled, mentioning what you think  the stain is. When"},{"doc_id":"EFTA00066372","dataset":"DataSet_9","text":"Wash all new towels and linen before use.  \u2022 Rotate your towels and sheets so as not to wear them out.  \u2022 Worn towels should be transferred to staff quarters for staff use.  \u2022 Bed linens are taken to Snow White Laundry.  \u2022 Clothes that require dry cleaning are taken to Spartan Cleaners. If the garment is  stained, be sure to show the cleaner where it is soiled, mentioning what you think  the stain is. When"},{"doc_id":"EFTA00072871","dataset":"DataSet_9","text":"Wash all new towels and linen before use.  \u2022 Rotate your towels and sheets so as not to wear them out.  \u2022 Worn towels should be transferred to staff quarters for staff use.  \u2022 Bed linens are taken to Snow White Laundry.  \u2022 Clothes that require dry cleaning are taken to Spartan Cleaners. If the garment is  stained, be sure to show the cleaner where it is soiled, mentioning what you think  the stain is. When"},{"doc_id":"EFTA00075882","dataset":"DataSet_9","text":"Wash all new towels and linen before use.  \u2022 Rotate your towels and sheets so as not to wear them out.  \u2022 Worn towels should be transferred to staff quarters for staff use.  \u2022 Bed linens are taken to Snow White Laundry.  \u2022 Clothes that require dry cleaning are taken to Spartan Cleaners. If the garment is  stained, be sure to show the cleaner where it is soiled, mentioning what you think  the stain is. When"},{"doc_id":"EFTA00145666","dataset":"DataSet_9","text":"to Little St. James, \"Arrived  at your harbor. Someday, we have to do this together.\"  61.  In July 2010, Staley sent an email to Epstein, saying: \"Maybe they're tracking u?  That was fun. Say hi to Snow White.\" Epstein responded: \"[W]hat character would you like next?\"  When Staley said \"Beauty and the Beast\", Epstein replied: \"well one side is available.\"  62.  None of the emails between Epstein and Stal"},{"doc_id":"EFTA00159394","dataset":"DataSet_9","text":"\u2022 Wash all new towels and linen before use.  \u2022 Rotate your towels and sheets so as not to wear them out.  Worn towels should be transferred to staff quarters for staff use.  \u2022 Bed linens are taken to Snow White Laundry.  Clothes that require dry cleaning are taken to Spartan Cleaners. If the garment is  stained, be sure to show the cleaner where it is soiled, mentioning what you think  the stain is. When yo"},{"doc_id":"EFTA00299446","dataset":"DataSet_9","text":"5/8\"x5/8\" - Sh walls, based on 4\"H  White Gloss MM Bullnose 3x6, 6\"side  36  2.25  81.00  81.00T  Bath #4/Nannys  White Mane 12x12 - Rm Floor, 14.71sf im  carton  58.84  5.50  323.62  323.62T  #U-072 Snow White Gloss MM 6x6 - Sh  wall, no ceiling  95  3.50  332.50  332.50T  White Mane 2x2 - Sh Floor  15  7.72  115.80  I I5.80T  Subtotal  Sales Tax (6.35%)  Total  Page 1  EFTA00299446  Stepping Stones M & G"},{"doc_id":"EFTA00299446","dataset":"DataSet_9","text":"ff. Lesley  Estimate  Date  Estimate #  628/2013  2847  Project  Lath 2, Bath 3 & Ba...  Description  Qty  Rate  Amount  Unit  sq.ft.o pcs  Total  Mosaic Border TBD - Sh Walls, based on  6\" H  #U-072 Snow White Gloss MM Bullnose  2x6  Delivery Charge to Norwalk Warehouse  This is a non-stocked item. The above  materials are special order items which are  non-returnable. Your material will be  ordered based"},{"doc_id":"EFTA00299448","dataset":"DataSet_9","text":"5/8\"x5/8\" - Sh walls, based on 411  White Gloss MM Bullnose 3x6, 6\"side  36  2.25  81.00  81.00T  Bath #4/Nannys  White Mane 12x12 - Rm Floor, 14.71sf im  canon  58.84  5.50  323.62  323.62T  #U-072 Snow White Gloss MM 6x6 - Sh  wall, no ceiling  95  3.50  332.50  332.50T  White Mane 2x2 - Sh Floor  15  7.72  115.80  115.80T  Subtotal  Sales Tax (6.35%)  Total  Page 1  EFTA00299448  Stepping Stones M & G L"},{"doc_id":"EFTA00299448","dataset":"DataSet_9","text":"ff. Lesley  Estimate  Date  Estimate #  6/3/2013  2847  Project  Lath 2, Bath 3 & Ba...  Description  Qty  Rate  Amount  Unit  sq.ft.o pcs  Total  Mosaic Border TBD - Sh Walls, based on  6\" H  #U-072 Snow White Gloss MM Bullnose  2x6  Delivery Charge to Norwalk Warehouse  This is a non-stocked item. The above  materials are special order items which are  non-returnable. Your material will be  ordered based"},{"doc_id":"EFTA00307603","dataset":"DataSet_9","text":"Not Fade Away  Paramount  On the Road  IFC  Not available  Paranorman  Focus Features  Perks of Being a Wallflower  Summit  Promised Land  Madagascar 3  Paramount  Moonrise Kingdom  Focus Features  Snow White and the  Huntsman  Universal  Quartet  TWC  Rust and Bone  Sony Pictures Classics  Searching for Sugarman  Sony Pictures Classics  Show Stopper  Smashed  Sony Pictures Classics  Stand U Gu s  Lions a"},{"doc_id":"EFTA00307605","dataset":"DataSet_9","text":"Peter Brant  The Sessions  Fox Searchlight  Silver Linings Playbook  (5 copies)  TWC  Samantha Boardman  Peggy has three  Dixon Boardman  Skyfall  Sony  Earle Mack  Smashed  Sony Pictures Classics  Snow White and the  Huntsman  Universal  Stand Up Guys  Lionsgate  Ted  Universal  To Rome with Love  Sony Pictures Classics  Emilia Fanjul  This is 40  Universal  Quentin Schaffer  Samantha Boardman wants  to"},{"doc_id":"EFTA00410828","dataset":"DataSet_9","text":"adagascar 3: Europe's Most...  Prometheus  3. Rock of Ages  That's My Boy  Abraham Lincoln:  Seeking a Friend for  Vampire Hunter  the End of the World  VIEW AU_ a  $34.0M  $20.7M  $14.4M  $13.4M  5. Snow White and the Huntsman  $13.2M  8. Men in Black III  $10.0kl  7. Marvels The Avengers  $8.9M  The Best Exotic Marigold Ho'.  $2.2M  9. Moonrise Kingdom  10. Battleship  SWEEPTAKES + SPECIAL OFFERS  ;;,EAT"},{"doc_id":"EFTA00436855","dataset":"DataSet_9","text":"ly  Hi Lesley Groff. Check out these events in New York.  Your list of events is personalized to your preferences. Improve this list by updating your preferences.  Events in Your Area  :od t [Goa:  WiSnow White  ON SALE on Live Nation  03/13/11  Snow White  2i) re e's)  Tue. 07/12/11  Westbury, NY  NYCB Theatre at Westbury  My Favorites with Events  Hello Lesley Groff.  1 of your favorites has local  events"},{"doc_id":"EFTA00436855","dataset":"DataSet_9","text":"New York.  Your list of events is personalized to your preferences. Improve this list by updating your preferences.  Events in Your Area  :od t [Goa:  WiSnow White  ON SALE on Live Nation  03/13/11  Snow White  2i) re e's)  Tue. 07/12/11  Westbury, NY  NYCB Theatre at Westbury  My Favorites with Events  Hello Lesley Groff.  1 of your favorites has local  events.  \u2022 Wicked (NY)  Update your favorites  Featu"},{"doc_id":"EFTA00436860","dataset":"DataSet_9","text":"ceipt  Order History  Purchase Ticket Insurance  Edit Billing Information  Manage My Alerts  Retail Outlets  \u2022 Apr  On Sale  ;t, 29  Hollis Brown : Turkauz  Mercury Lounge  Fri. 03/11/11  FRI  \u2022 Jul  Snow White  On Sale  12  TUE  NYCB Theatre at Westbury  on Live Nation  Sun, 03/13/11  ;ti  \u2022 Aug \u2022  2  TUE  Jack and the Beanstalk  NYCB Theatre at Westbury  On Sale  on Live Nation  Sun, 03/13/11  \u2022 May \u2022  Ph"},{"doc_id":"EFTA00547674","dataset":"DataSet_9","text":"From: Nadia <EIMIII >  To: Sarah K  Date: The, 26 Jun 2012 15:32:35 +0000  Attachments: lunchijpg; White.jpg  Hey K.  I am not in NYC. Not sure when I'll be back yet. I have new hair again. I watched Snow White and this is what  happened... :)  How are you doing?  EFTA00547674"},{"doc_id":"EFTA00585883","dataset":"DataSet_9","text":"Peter Brant  The Sessions  Fox Searchlight  Silver Linings Playbook  (5 copies)  TWC  Samantha Boardman  Peggy has three  Dixon Boardman  Skyfall  Sony  Earle Mack  Smashed  Sony Pictures Classics  Snow White and the  Huntsman  Universal  Stand Up Guys  Lionsgate  Ted  Universal  To Rome with Love  Sony Pictures Classics  Emilia Fanjul  This is 40  Universal  Quentin Schaffer  Samantha Boardman wants  to"},{"doc_id":"EFTA00595484","dataset":"DataSet_9","text":"y primer and sand.  Thoroughly sand all surfaces and clean free of dust with vacuum, compassed air,  solvent and two rag method.  Remove and replace protective materials.  Apply Awlgrip Awlcraft 2000 Snow white.  Remove protective materials and dispose of all waste appropriately.  LABOR and MATERIALS:  II- REPAIR REDUNDANT AFT DECK BULLWARKS CUSHION MOUNT  HOLES:  Protect immediate surrounding surfaces with"},{"doc_id":"EFTA00620177","dataset":"DataSet_9","text":"AL PAINTED SHERWIN WILLIAMS ACRYGLO  'PHANTOM GRAY METALLIC RN H10683 R.V. 9.  0.00  111030  Airframe  EXTERIOR PAINT 5  20.7 Hrs  11 CI_  29 Apr 2008  WINGWALK AREAS PAINTED SHERWIN WILLIAMS JETGLO \"SNOW WHITE RN  S70566 R.V. 84.  0.00  121400  Engine 1  Air Turbine Starter Oil - Change  12.14.13  500 Hrs  3307.1 Hrs  927 CI_  19 Mar 2014  ISO Hour Window]  3854.6 Hrs'  3.00  121400  (121401)  Air Turbine"},{"doc_id":"EFTA00667281","dataset":"DataSet_9","text":"of iTunes  and later last night we became  The number one drama and number one thriller and independent film.  EFTA00667281  We're now leading all those categories, and closing in on the juggernaut \"Snow White\" for the number one spot  on all of iTunes. \"Snow White\" cost somewhere around $300 million to make and market, a budget almost 30  times ours.  Can I ask those of you who didn't yet have a chance to"},{"doc_id":"EFTA00667281","dataset":"DataSet_9","text":"ne drama and number one thriller and independent film.  EFTA00667281  We're now leading all those categories, and closing in on the juggernaut \"Snow White\" for the number one spot  on all of iTunes. \"Snow White\" cost somewhere around $300 million to make and market, a budget almost 30  times ours.  Can I ask those of you who didn't yet have a chance to rate to click on this link, and rate the film and/or wr"},{"doc_id":"EFTA00694947","dataset":"DataSet_9","text":"s and an artist book which examine the impact of social and cultural norms on  identity, questioning how we choose to define ourselves  London  EFTA00694949  Marian Goodman Gallery: Hiroshi Sugimoto: Snow White - preview Thu, 26 Oct  a collection of images of theatres and movie screens which aim to capture an entire film  in a single photographic exposure  National Portrait Gallery: Cezanne Portraits  Pippy"},{"doc_id":"EFTA00735698","dataset":"DataSet_9","text":"From: Jeffrey Epstein <jeevacation@gmail.com>  To:'  Subject: Re:  Date: Sun, 20 Jun 2010 23:28:21 +0000  brett ratner ,is going to film a big movie\u201e Snow White, i would love to take photos of you in a snow white  costume. you can get it from the costume store  On Sun, Jun 20, 2010 at 6:13 PM, <  > wrote:  Got feedback from audition! Students want to film me"},{"doc_id":"EFTA00735698","dataset":"DataSet_9","text":"om: Jeffrey Epstein <jeevacation@gmail.com>  To:'  Subject: Re:  Date: Sun, 20 Jun 2010 23:28:21 +0000  brett ratner ,is going to film a big movie\u201e Snow White, i would love to take photos of you in a snow white  costume. you can get it from the costume store  On Sun, Jun 20, 2010 at 6:13 PM, <  > wrote:  Got feedback from audition! Students want to film mew  Will call u tmw, still in hampons)  Miss Uuuuu  S"},{"doc_id":"EFTA00736518","dataset":"DataSet_9","text":"es Staley  Sent: Fri Jul 09 21:02:03 2010  Subject: Re:  what character would you like next  On Fri, Jul 9, 2010 at 8:45 PM, Jes Staley 1=  wrote:  Maybe they're tracking u??  That was fun. Say hi to Snow White.  This email is confidential and subject to important disclaimers and  conditions including on offers for the purchase or sale of  securities, accuracy and completeness of information, viruses,  conf"},{"doc_id":"EFTA00741531","dataset":"DataSet_9","text":"From:  To: \"Jeffrey\"  Date: Sat, 10 Jul 2010 00:36:29 +0000  the snow white was f..ed twice as soon as she put her costume))  EFTA00741531"},{"doc_id":"EFTA00741535","dataset":"DataSet_9","text":"From: Jes Staley .cz Ell=a>  To: leevacation@gmail.comm <jeevacation@gmailsom>  Subject:  Date: Sat, 10 Jul 2010 00:45:06 +0000  Maybe they're tracking u??  That was fun. Say hi to Snow White.  This email is confidential and subject to important disclaimers and conditions including on  offers for the purchase or sale of  securities, accuracy and completeness of information, viruses, confi"},{"doc_id":"EFTA00741563","dataset":"DataSet_9","text":"From: Jeffrey Epstein <jeevacation@gmail.com>  To:  Subject:  Date: Wed, 04 Nov 2009 07:14:58 +0000  snow white? now what?  The information contained in this communication is  confidential, may be attorney-client privileged, may  constitute inside information, and is intended only for  the use of the addressee"},{"doc_id":"EFTA00741578","dataset":"DataSet_9","text":"s Staley  Sent: Fri Jul 09 21:02:03 2010  Subject: Re:  what character would you like next  On Fri, Jul 9, 2010 at 8:45 PM, Jes Staley <  > wrote:  Maybe they're tracking u??  That was fun. Say hi to Snow White.  This email is confidential and subject to important disclaimers and  conditions including on offers for the purchase or sale of  securities, accuracy and completeness of information, viruses,  conf"},{"doc_id":"EFTA00746255","dataset":"DataSet_9","text":"00  Will get it!  Sent via BlackBeny from T-Mobile  From: Jeffrey Epstein <jeevacation@gmail.com>  Date: Sun, 20 Jun 2010 19:28:21 -0400  To: Subject: Re:  brett ratner ,is going to film a big movie\u201e Snow White, i would love to take photos of you in a snow white  costume. you can get it from the costume store  On Sun, Jun 20, 2010 at 6:13 PM, <  > wrote:  Got feedback from audition! Students want to film me"},{"doc_id":"EFTA00746255","dataset":"DataSet_9","text":"From: Jeffrey Epstein <jeevacation@gmail.com>  Date: Sun, 20 Jun 2010 19:28:21 -0400  To: Subject: Re:  brett ratner ,is going to film a big movie\u201e Snow White, i would love to take photos of you in a snow white  costume. you can get it from the costume store  On Sun, Jun 20, 2010 at 6:13 PM, <  > wrote:  Got feedback from audition! Students want to film men m Will call u tmw, still in hampons)  Miss Uuuuu"},{"doc_id":"EFTA00765122","dataset":"DataSet_9","text":"times, excoriating  ways, she is frequently both tragic and humorous.  Tracey Emin  When I Think about Sex I Think about Men - Women, Dogs, Lions, Group Sex (And I Love you all)  2005  Edition of 3  Snow white neon  46 7/8 x 92 1/8 in. (119 x 234 cm)  GBP 60,000.00  Tracey Emin  A Rose  2007  Acrylic on canvas  72 1/16 x 72 1/16 x 1 3/8 in. (183 x 183 x 3.5 cm)  GBP 165,000.00  Marc Quinn, is one of the le"},{"doc_id":"EFTA00768202","dataset":"DataSet_9","text":"From:  To: \"Jeffrey Epstein\" <jeevacation\u00aegmail.com>  Subject: Snow white  Date: Wed, 04 Nov 2009 15:41:36 +0000  Importance: Normal  Attachments: IMG00358.jpg  Hi...well Haloween was ok...my first one ever in NY..but too many ppl everywhere...  I don't really have much ne"},{"doc_id":"EFTA00793163","dataset":"DataSet_9","text":"le extension, credenza.  \u2022 Bulkhead with electric pocket door between mid and aft cabins.  \u2022 Aft cabin: dual aft divans.  \u2022 Electric two tone contrasting window shades for blackout.  \u2022 Exterior paint snow white with custom silver castle stripes.  ENTERTAINMENT  Connectivity  Satcom Direct Router  JetConneX KA Band High Speed Internet  Gulfstream CabinView flight information system  Moving map & passengers s"},{"doc_id":"EFTA00798920","dataset":"DataSet_9","text":"1    1  EFTA00798920  L  \\  /  EFTA00798921  Bright White*  #381  Snow White\u2022  #11  Antique White`  #10  Alabaster\u2022  #333  Bone`  #382  Linen'  #122  Butter Cream'  #17  EFTA00798922  Fawn`  #156  Sahara Tan'  #22  Summer Wheat'  #45  Haystack'  #380  Light Smoke'  #145  Eart"},{"doc_id":"EFTA00886085","dataset":"DataSet_9","text":"From: Jeffrey Epstein <jeevacation@gmail.com>  To:  Subject:  Date: Wed, 04 Nov 2009 07:14:58 +0000  snow white? now what?  The information contained in this communication is  confidential, may be attorney-client privileged, may  constitute inside information, and is intended only for  the use of the addressee"},{"doc_id":"EFTA00893031","dataset":"DataSet_9","text":"From: Jeffrey Epstein <jeevacation\u00aegmail.com>  To:  Subject: Re:  Date: Sun, 20 Jun 2010 23:28:21 +0000  brett ratner ,is going to film a big movie\u201e Snow White, i would love to take photos of you in a snow white  costume. you can get it from the costume store  On Sun, Jun 20, 2010 at 6:13 PM, <  > wrote:  Got feedback from audition! Students want to film me"},{"doc_id":"EFTA00893031","dataset":"DataSet_9","text":"rom: Jeffrey Epstein <jeevacation\u00aegmail.com>  To:  Subject: Re:  Date: Sun, 20 Jun 2010 23:28:21 +0000  brett ratner ,is going to film a big movie\u201e Snow White, i would love to take photos of you in a snow white  costume. you can get it from the costume store  On Sun, Jun 20, 2010 at 6:13 PM, <  > wrote:  Got feedback from audition! Students want to film mew  Will call u tmw, still in hampons)  Miss Uuuuu  S"},{"doc_id":"EFTA00894079","dataset":"DataSet_9","text":"s Staley <.  Subject: Re:  Date: Sat, 10 Jul 2010 01:02:03 +0000  what character would you like next  On Fri, Jul 9, 2010 at 8:45 PM, Jes Staley <  Maybe they're tracking u??  That was fun. Say hi to Snow White.  This email is confidential and subject to important disclaimers and  conditions including on offers for the purchase or sale of  securities, accuracy and completeness of information, viruses,  conf"},{"doc_id":"EFTA00894090","dataset":"DataSet_9","text":"s Staley  Sent: Fri Jul 09 21:02:03 2010  Subject: Re:  what character would you like next  On Fri, Jul 9, 2010 at 8:45 PM, Jes Staley <  > wrote:  Maybe they're tracking u??  That was fun. Say hi to Snow White.  This email is confidential and subject to important disclaimers and  conditions including on offers for the purchase or sale of  securities, accuracy and completeness of information, viruses,  conf"},{"doc_id":"EFTA01087660","dataset":"DataSet_9","text":"ghtning strike inspection  Total Labor  Material (Consumables)  Quantity  Unit Description  Part No.  0.946  LI  CATALYST/HARDENER PER US  571.081  1  EA  CATALYST PER US QUART.  571-082  5  L  PAINT SNOW WHITE EXPRESS  CM0840102  1  EA  DEGREASING AGENT,QUICK,VC  CW201 0.5 (11320)  6  EA  BOLT  GAB511GA3-10  3  EA  BOLTS  GAB511GA3-12  50  EA  SCREW  GAB511GA3-5  5  EA  SCREW  GA8511GA3-7  2  EA  BOLT  GAB"},{"doc_id":"EFTA01087660","dataset":"DataSet_9","text":"echanic Normal Time  Total Labor  Material (Consumables)  luantity  Unit Description  Part No.  4  PCK SANDING DISK,MIRKA ABRANE  102032 KORN 1500  2  EA  FILM,RED,TESA,19MM  4104-19  3.785  L  PAINT SNOW WHITE  570-566  1  EA  PAD,POLISHING,SUPERBUFF,2  604300-5009-0  12  ROL TAPE,MASKING  6280/50  4  EA  CLEANING RAGS MICROFIBER,  71.03.01  1  EA  CLEANER,SPRAY,MS-260  MS260  MISC. SMALL PARTS  Total Mate"},{"doc_id":"EFTA01090973","dataset":"DataSet_9","text":"orian voices,  from WOR (which I thought spelled \"war\") announcing military victories and defeats. I can still  sing ditties I learned from friends (the first sung to the tune of the Disney song from Snow  White).  \"Whistle while you work  Hitler is a jerk  Mussolini is a meanie  And the Japs are worse\"  And another (sung to the melody of \"My Country Tis of Thee, Sweet Land of Liberty\"):  \"My country tis of"},{"doc_id":"EFTA01111494","dataset":"DataSet_9","text":",000  11/26/12  8  The Bourne Legacy  181,960,038  103,919,255  78,040,783  8/10/12  5  Savages  50,767,382  47,323,100  3,444,282  7/6/12  9  Ted  394,891,470  216,904,410  177,987,060  6/29/12  11  Snow White and the Huntsman  396,397,203  155,136,755  241,260,448  6/1/12  14  Battleship  302,836,260  65,233,400  237,602,860  5/18/12  11  The Five Year Engagement  52,607,126  28,700,285  23,906,841  4/27/"},{"doc_id":"EFTA01141795","dataset":"DataSet_9","text":"rlen The Wizard of Oz: Over the Rainbow 4:43  16.  S. Fain Alice in Wonderland: All in the Golden Afternoon 2:15  17.  A. Menken Arieiie, die Meerjungfrau: Ein Mensch zu sein 3:22  i E.  F. Churchill Snow White and the Seven Dwarfs:  Some Day My Prince Will Come 3:26  19.  R. M. Sherman, R. B. Sherman Mary Poppins: Feed the Birds 4:33  20.  H. Blake The Snowman: Walking in the Air 4:01  21.  F. Chaslin Wuth"},{"doc_id":"EFTA01178223","dataset":"DataSet_9","text":"From:  To: JE Jail <jeevacation@gmail.com>  Date: The, 26 Jun 2012 15:31:43 +0000  Attachments: Whitejpg; black.jpg  1 watched Snow White...  EFTA01178223"},{"doc_id":"EFTA01205069","dataset":"DataSet_9","text":"primary structural components and amenities built using  West System construction methods.  Exterior/Salon Finish  \u2022 Dupont polyurethane paint system  \u2022 Commercial yacht finish  Paint and Graphics  \u2022 Snow White topsides and cabin  \u2022 Light grey window stripe and nonskid  \u2022 2 Coats Islands 77 bottom paint, 3 on waterline  \u2022 4\" Name and hailing port on aft beam  \u2022 4\" Name on port and starboard bows  ACCOMMODAT"},{"doc_id":"EFTA01223023","dataset":"DataSet_9","text":"ition: New  1 of: Queen Comforter Soft Quilted \u2022 Down Alternative Duvet Insert with Corner $39.90  Tabs Summer Cooling 2100 Series, Fluffy Reversible Hotel Collection,  Hypoallergenic for All Season, Snow White, 88 x 88 inches  Sold by: Tekamon (sell- r I of I')  Condition: New  1 of: King Comforter Soft Quilted Down Alternative Duvet Insert with Corner  Tabs Summer Cooling 2100 Series,Luxury Fluffy Reversi"},{"doc_id":"EFTA01223023","dataset":"DataSet_9","text":"Condition: New  1 of: King Comforter Soft Quilted Down Alternative Duvet Insert with Corner  Tabs Summer Cooling 2100 Series,Luxury Fluffy Reversible Hotel  Collection,Hypoallergenic for All Season,Snow White,90 x 102 inches  Sold by: Tekamon (seller profile)  Condition: New  2 of: AmazonBasics Nespresso Pod Storage Drawer - 50 Capsule Capacity  Sold by: Amazon.com Services, Inc  Condition: New  $59.90  $"},{"doc_id":"EFTA01245248","dataset":"DataSet_9","text":"Wash all new towels and linen before use.  \u2022 Rotate your towels and sheets so as not to wear them out.  \u2022 Worn towels should be transferred to staff quarters for staff use.  \u2022 Bed linens are taken to Snow White Laundry.  \u2022 Clothes that require dry cleaning are taken to Spartan Cleaners. If the garment is  stained, be sure to show the cleaner where it is soiled, mentioning what you think  the stain is. When"},{"doc_id":"EFTA01256171","dataset":"DataSet_9","text":"Jes Staley <  Sent:  7/10/2010 2:02:03 AM  Subject:  Re:  what character would you like next  On Fri, Jul 9, 2010 at 8:45 PM, Jes Staley  wrote:  Maybe they're tracking u??  That was fun. Say hi to Snow White.  This email is confidential and subject to important disclaimers and  conditions including on offers for the purchase or sale of  securities, accuracy and completeness of information, viruses,  conf"}];
+
+const CATS = {
+    "Nome in codice":{color:"#e63946",cls:"b-code",kw:["say hi to","what character","costume","f..ed","now what","snow white?","was f..ed","put her costume","like next","beauty and the beast","one side is available","selena"]},
+    "Film/Intrattenimento":{color:"#f4a261",cls:"b-film",kw:["huntsman","box office","itunes","million to make","budget","$","box office","savages","bourne","battleship","ted ","universal","paramount","lionsgate","sony","twc","fox searchlight","summit","focus features","ifc","cancelled","dwarfs:","seven dwarfs","jet black","african-american","hi ho","disney","cartoon","animated","pinocchio","fantasia","dumbo","beauty and the beast and the little","mary poppins","mickey mouse","amusement park","grade 4","end-of-year","live nation","nycb theatre","westbury","ticketmaster","on sale","wicked","favorites","events in your area","marian goodman","sugimoto","preview thu","tracey emin","neon","acrylic on canvas","churchill snow white and the seven dwarfs","prince will come","feed the birds","wizard of oz","snowman"]},
+    "Manutenzione/Vernice":{color:"#2a9d8f",cls:"b-maint",kw:["paint snow white","awlgrip","awlcraft","sherwin williams","jetglo","wingwalk","catalyst","sanding","bolt","screw","polishing","tape,masking","primer","solvent","exterior paint","topsides and cabin","bottom paint","waterline","dupont polyurethane","commercial yacht","light grey","nonskid","custom silver castle"]},
+    "Lavanderia/Domestico":{color:"#9b59b6",cls:"b-laundry",kw:["snow white laundry","spartan cleaners","dry cleaning","bed linens","towels","staff quarters","rotate your towels","stained"]},
+    "Prodotti/Materiali":{color:"#3498db",cls:"b-product",kw:["gloss mm","bullnose","6x6","tile","mosaic","stepping stones","warehouse","non-returnable","#11","#381","bright white","antique white","alabaster","bone","linen","butter cream","comforter","duvet","tekamon","hypoallergenic","amazon","nespresso","openness","beige","mocha","buckwheat","chestnut","ebony"]},
+    "Ambiguo/Sospetto":{color:"#f1c40f",cls:"b-art",kw:["watched snow white","white.jpg","black.jpg","je jail","new hair","snow white...","attachments"]}
+};
+
+function classify(t){
+    if(!t) return {name:"Altro",color:"#888",c:"b-other"};
+    const l = t.toLowerCase();
+    // Priority: code name first
+    const codeKw = CATS["Nome in codice"].kw;
+    for(const k of codeKw){
+        if(l.includes(k)) return {name:"Nome in codice",...CATS["Nome in codice"]};
+    }
+    for(const [name,cat] of Object.entries(CATS)){
+        if(name==="Nome in codice") continue;
+        for(const k of cat.kw){
+            if(l.includes(k)) return {name,color:cat.color,c:cat.cls};
+        }
+    }
+    return {name:"Altro",color:"#888",c:"b-other"};
+}
+
+function detectSender(t){
+    if(!t)return"Sconosciuto";
+    const l=t.toLowerCase();
+    if(/(?:from|fran):\s*(?:jeffrey|jeevacation)/i.test(t)||/jeevacation@gmail/i.test(t)&&l.indexOf("from")!==-1&&l.indexOf("from")< l.indexOf("jeevacation")+30)return"Jeffrey Epstein";
+    if(/jes staley/i.test(t)&&/(?:from|wrote)/i.test(t))return"Jes Staley";
+    if(/selena p/i.test(t))return"Selena P";
+    if(/nadia/i.test(t)&&/from/i.test(t))return"Nadia";
+    if(/lesley groff/i.test(t))return"Lesley Groff";
+    return"Sconosciuto";
+}
+
+function detectYear(t){
+    const m=(t||"").match(/20[01]\d/g);
+    return m?m[0]:"N/A";
+}
+
+function dojUrl(id,ds){
+    const n=ds.replace("DataSet_","");
+    return"https://www.justice.gov/epstein/files/DataSet%20"+n+"/"+id+".pdf";
+}
+
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function hlSnippet(t){
+    if(!t)return"";
+    const l=t.toLowerCase(),p=l.indexOf("snow white");
+    if(p===-1) return esc(t.substring(0,300));
+    const s=Math.max(0,p-150),e=Math.min(t.length,p+200);
+    let sn=esc(t.substring(s,e)).replace(/\n/g," ");
+    sn=sn.replace(/(snow\s*white)/gi,'<span class="hl">$1</span>');
+    return(s>0?"...":"")+sn+(e<t.length?"...":"");
+}
+
+let D=[],F=[],pg=1,PP=window.innerWidth<=768?20:50,sCol=null,sAsc=true;
+
+function init(){
+    D=RAW.map((r,i)=>{
+        const cat=classify(r.text);
+        return{...r,i:i+1,sender:detectSender(r.text),year:detectYear(r.text),_cat:cat};
+    });
+    F=[...D];
+
+    document.getElementById("sTotal").textContent=D.length;
+    document.getElementById("sDocs").textContent=new Set(D.map(r=>r.doc_id)).size;
+    const codeCount=D.filter(r=>r._cat.name==="Nome in codice").length;
+    document.getElementById("sCode").textContent=codeCount;
+    const yrs=D.map(r=>+r.year).filter(y=>y>2000&&y<2025).sort();
+    document.getElementById("sYears").textContent=yrs.length?yrs[0]+"-"+yrs[yrs.length-1]:"N/A";
+
+    renderCats();
+    renderCharts();
+    renderPatterns();
+    fillFilters();
+    renderTable();
+}
+
+function renderCats(){
+    const cc={};
+    D.forEach(r=>{cc[r._cat.name]=(cc[r._cat.name]||0)+1;});
+    const s=Object.entries(cc).sort((a,b)=>b[1]-a[1]);
+    document.getElementById("catGrid").innerHTML=s.map(([nm,cnt])=>{
+        const cat=CATS[nm]||{};
+        const col=cat.color||"#555";
+        return`<div class="cat-card" style="border-left-color:${col}"><h4>${nm}</h4><div class="cnt" style="color:${col}">${cnt}</div><div class="pct">${((cnt/D.length)*100).toFixed(1)}%</div></div>`;
+    }).join("");
+}
+
+function renderCharts(){
+    const isMobile=window.innerWidth<=768;
+    const legendPos=isMobile?"bottom":"right";
+
+    // Cat donut
+    const cc={};D.forEach(r=>{cc[r._cat.name]=(cc[r._cat.name]||0)+1;});
+    const cl=Object.entries(cc).sort((a,b)=>b[1]-a[1]).map(e=>e[0]);
+    new Chart(document.getElementById("cCat"),{type:"doughnut",data:{labels:cl,datasets:[{data:cl.map(c=>cc[c]),backgroundColor:cl.map(c=>(CATS[c]?.color||"#555")+"99"),borderColor:cl.map(c=>CATS[c]?.color||"#555"),borderWidth:2}]},options:{responsive:true,plugins:{legend:{position:legendPos,labels:{color:"#bbb",font:{size:isMobile?9:11}}}}}});
+
+    // Dataset
+    const dc={};D.forEach(r=>{dc[r.dataset]=(dc[r.dataset]||0)+1;});
+    const dl=Object.keys(dc).sort();
+    new Chart(document.getElementById("cDs"),{type:"bar",data:{labels:dl,datasets:[{data:dl.map(d=>dc[d]),backgroundColor:"#2a9d8f66",borderColor:"#2a9d8f",borderWidth:1}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#888"},grid:{color:"#1a1a2e"}},y:{ticks:{color:"#888"},grid:{color:"#1a1a2e"}}}}});
+
+    // Senders
+    const sc={};D.forEach(r=>{sc[r.sender]=(sc[r.sender]||0)+1;});
+    const sl=Object.entries(sc).sort((a,b)=>b[1]-a[1]).slice(0,10).map(e=>e[0]);
+    new Chart(document.getElementById("cSend"),{type:"bar",data:{labels:sl,datasets:[{data:sl.map(s=>sc[s]),backgroundColor:"#f4a26166",borderColor:"#f4a261",borderWidth:1}]},options:{indexAxis:"y",responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:"#888"},grid:{color:"#1a1a2e"}},y:{ticks:{color:"#888",font:{size:10}},grid:{color:"#1a1a2e"}}}}});
+
+    // Code vs innocent pie
+    const codeN=D.filter(r=>r._cat.name==="Nome in codice").length;
+    const innocN=D.length-codeN;
+    new Chart(document.getElementById("cCode"),{type:"doughnut",data:{labels:["Uso come codice ("+codeN+")","Uso innocuo ("+innocN+")"],datasets:[{data:[codeN,innocN],backgroundColor:["#e6394699","#2a9d8f99"],borderColor:["#e63946","#2a9d8f"],borderWidth:2}]},options:{responsive:true,plugins:{legend:{position:legendPos,labels:{color:"#bbb",font:{size:isMobile?9:11}}}}}});
+}
+
+function renderPatterns(){
+    const codeN=D.filter(r=>r._cat.name==="Nome in codice").length;
+    const staleyN=D.filter(r=>r.sender==="Jes Staley").length;
+    const epsteinN=D.filter(r=>r.sender==="Jeffrey Epstein").length;
+    const selenaN=D.filter(r=>r.sender==="Selena P").length;
+    const costumeN=D.filter(r=>(r.text||"").toLowerCase().includes("costume")).length;
+    const characterN=D.filter(r=>(r.text||"").toLowerCase().includes("character")).length;
+    const photoN=D.filter(r=>{const t=(r.text||"").toLowerCase();return t.includes("photo")||t.includes(".jpg")||t.includes("attachments");}).length;
+
+    document.getElementById("patBox").innerHTML=`
+        <div class="pat"><h4 style="color:#e63946">Sistema di nomi in codice Disney</h4><p><span class="num">${codeN}</span> occorrenze identificate come uso in codice.<br>La frase chiave <em>"what character would you like next"</em> appare in <span class="num">${characterN}</span> documenti — implica un <strong>catalogo di persone</strong> identificate con personaggi Disney (Snow White, Beauty and the Beast, ecc.).</p></div>
+        <div class="pat"><h4 style="color:#f4a261">Asse Staley-Epstein</h4><p><strong>Jes Staley</strong> (CEO JPMorgan/Barclays) appare in <span class="num">${staleyN}</span> occorrenze. Epstein in <span class="num">${epsteinN}</span>.<br>"Say hi to Snow White" + "That was fun" suggerisce partecipazione diretta a un incontro con la persona identificata come "Snow White".</p></div>
+        <div class="pat"><h4 style="color:#e63946">Pattern "costume" — grooming</h4><p><span class="num">${costumeN}</span> occorrenze menzionano "costume".<br>Epstein chiede a una giovane donna foto in costume Snow White. Selena P riporta che "the snow white was f..ed twice as soon as she put her costume" — il costume come elemento di <strong>role-play sessuale</strong>.</p></div>
+        <div class="pat"><h4 style="color:#9b59b6">Pattern fotografico</h4><p><span class="num">${photoN}</span> occorrenze con riferimenti a foto o allegati.<br>Epstein chiede di "take photos" in costume. Altre email includono allegati .jpg con subject "Snow White". Pattern ricorrente: <strong>richiesta foto → costume → identita Disney</strong>.</p></div>
+        <div class="pat"><h4 style="color:#2a9d8f">Copertura semantica</h4><p>Su <span class="num">${D.length}</span> occorrenze totali, solo <span class="num">${codeN}</span> (${((codeN/D.length)*100).toFixed(0)}%) sono uso come codice. Il restante ${(100-(codeN/D.length)*100).toFixed(0)}% sono usi innocui (vernice, lavanderia, film, piastrelle).<br>Questa dispersione semantica rende il termine <strong>plausibilmente negabile</strong> — la stessa tecnica osservata con "Whoops".</p></div>
+        <div class="pat"><h4 style="color:#f1c40f">Concentrazione temporale</h4><p>Gli usi come codice si concentrano in <strong>3 periodi</strong>:<br>• Nov 2009: "snow white? now what?" + email con foto<br>• Giu 2010: richiesta foto in costume<br>• Lug 2010: scambio Staley + email Selena P<br>Tutti nel periodo <strong>post-prima condanna</strong> (2008), durante cui Epstein era sotto sorveglianza.</p></div>
+    `;
+}
+
+function fillFilters(){
+    const add=(sel,vals)=>vals.forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;sel.appendChild(o);});
+    add(document.getElementById("fCat"),[...new Set(D.map(r=>r._cat.name))].sort());
+    add(document.getElementById("fSend"),[...new Set(D.map(r=>r.sender))].sort());
+    add(document.getElementById("fDs"),[...new Set(D.map(r=>r.dataset))].sort());
+}
+
+function applyF(){
+    const q=document.getElementById("fSearch").value.toLowerCase();
+    const c=document.getElementById("fCat").value;
+    const s=document.getElementById("fSend").value;
+    const d=document.getElementById("fDs").value;
+    F=D.filter(r=>{
+        if(q&&!(r.text||"").toLowerCase().includes(q)&&!r.doc_id.toLowerCase().includes(q))return false;
+        if(c&&r._cat.name!==c)return false;
+        if(s&&r.sender!==s)return false;
+        if(d&&r.dataset!==d)return false;
+        return true;
+    });
+    if(sCol)F.sort((a,b)=>{
+        let va=a[sCol]||"",vb=b[sCol]||"";
+        if(sCol==="cat"){va=a._cat.name;vb=b._cat.name;}
+        if(sCol==="i")return sAsc?a.i-b.i:b.i-a.i;
+        return sAsc?String(va).localeCompare(String(vb)):String(vb).localeCompare(String(va));
+    });
+    pg=1;renderTable();
+}
+
+function renderTable(){
+    const s=(pg-1)*PP, page=F.slice(s,s+PP);
+    document.getElementById("rcount").textContent=F.length+" risultati su "+D.length;
+    document.getElementById("tbody").innerHTML=page.map((r,i)=>`<tr>
+        <td data-label="#">${s+i+1}</td>
+        <td data-label="Doc ID"><a class="dlink" href="${dojUrl(r.doc_id,r.dataset)}" target="_blank">${r.doc_id}</a></td>
+        <td data-label="Dataset">${r.dataset}</td>
+        <td data-label="Mittente">${r.sender}</td>
+        <td data-label="Anno">${r.year}</td>
+        <td data-label="Categoria"><span class="badge ${r._cat.c}">${r._cat.name}</span></td>
+        <td data-label="Rilevanza"><span class="badge ${r._cat.name==='Nome in codice'?'b-neg':r._cat.name==='Ambiguo/Sospetto'?'b-neu':'b-pos'}">${r._cat.name==='Nome in codice'?'CRITICO':r._cat.name==='Ambiguo/Sospetto'?'Sospetto':'Innocuo'}</span></td>
+        <td data-label="Contesto" class="ctx">${hlSnippet(r.text)}</td>
+    </tr>`).join("");
+
+    const tp=Math.ceil(F.length/PP),P=document.getElementById("pag");
+    if(tp<=1){P.innerHTML="";return;}
+    let h="";
+    if(pg>1)h+=`<button onclick="go(${pg-1})">&#9664;</button>`;
+    for(let p=1;p<=tp;p++){
+        if(p===1||p===tp||Math.abs(p-pg)<=2)h+=`<button class="${p===pg?'on':''}" onclick="go(${p})">${p}</button>`;
+        else if(Math.abs(p-pg)===3)h+=`<button disabled>…</button>`;
+    }
+    if(pg<tp)h+=`<button onclick="go(${pg+1})">&#9654;</button>`;
+    P.innerHTML=h;
+}
+function go(p){pg=p;renderTable();document.querySelector(".twrap").scrollIntoView({behavior:"smooth"});}
+
+document.querySelectorAll("th[data-s]").forEach(th=>th.addEventListener("click",()=>{
+    const c=th.dataset.s;if(sCol===c)sAsc=!sAsc;else{sCol=c;sAsc=true;}applyF();
+}));
+["fSearch","fCat","fSend","fDs"].forEach(id=>{
+    const el=document.getElementById(id);
+    el.addEventListener(el.tagName==="INPUT"?"input":"change",applyF);
+});
+
+init();
+</script>
+</body>
+</html>
