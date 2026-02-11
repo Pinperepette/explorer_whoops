@@ -186,9 +186,143 @@
 
         /* RESPONSIVE */
         @media(max-width:900px) {
-            .charts { grid-template-columns:1fr; }
-            .pat-grid { grid-template-columns:1fr; }
+            .charts,.pat-grid { grid-template-columns:1fr; }
+            .header { padding:20px 15px 18px; }
             .header h1 { font-size:1.8em; }
+            .container { padding:12px 10px; }
+            .filters { flex-direction:column; }
+            .filters input,.filters select { width:100%; }
+            .method-box .formula { font-size:.85em; padding:12px 10px; }
+        }
+
+        @media(max-width:768px) {
+            .topnav { padding:8px 10px; gap:10px; font-size:.78em; flex-wrap:wrap; }
+            .header { padding:16px 12px 14px; }
+            .header .brand { font-size:.7em; letter-spacing:3px; }
+            .header h1 { font-size:1.4em; letter-spacing:1px; }
+            .header .term-label { font-size:1em; padding:4px 16px; }
+            .header .subtitle { font-size:.82em; }
+            .stats-bar { gap:6px; }
+            .stat { padding:6px 10px; flex:1; min-width:70px; }
+            .stat .n { font-size:1.2em; }
+            .stat .l { font-size:.68em; }
+            .section { padding:14px 10px; margin-bottom:14px; }
+            .section h2 { font-size:1.1em; }
+            .cbox { padding:12px; }
+            .cbox canvas { max-height:220px; }
+            .pat { padding:10px; }
+            .pat p { font-size:.82em; }
+            .timeline { padding-left:22px; }
+            .evidence-box { padding:12px 14px; }
+            .evidence-box .ev-quote { font-size:.82em; padding-left:8px; }
+            .evidence-box .ev-docs { word-break:break-all; }
+            .method-box { padding:14px; }
+            .method-box p { font-size:.85em; }
+            .method-box .formula { font-size:.75em; padding:10px 8px; overflow-x:auto; }
+            .step-list li { padding-left:30px; font-size:.85em; }
+            .tabs { gap:1px; }
+            .tab-btn { padding:8px 12px; font-size:.78em; }
+            .example-grid { grid-template-columns:1fr !important; }
+
+            /* Card-style table for mobile */
+            table thead { display:none; }
+            table, table tbody { display:block; width:100%; }
+            table tr {
+                display:grid; grid-template-columns:1fr 1fr;
+                background:var(--surface2); border:1px solid var(--border);
+                border-radius:12px; margin-bottom:14px;
+                overflow:hidden;
+            }
+            table tr:hover { background:var(--surface2); }
+            table td {
+                display:block; padding:8px 14px; border-bottom:none; font-size:.85em;
+            }
+            table td::before {
+                content:attr(data-label);
+                display:block; font-size:.65em; font-weight:700;
+                color:var(--accent2); text-transform:uppercase;
+                letter-spacing:.8px; margin-bottom:2px; opacity:.85;
+            }
+            #disneyTable td:nth-child(1) {
+                grid-column:1/-1;
+                background:rgba(230,57,70,.08); border-bottom:1px solid var(--border);
+                padding:10px 14px; font-weight:bold; color:var(--accent);
+            }
+            #disneyTable td:nth-child(2) { grid-column:1; }
+            #disneyTable td:nth-child(3) { grid-column:2; }
+            #disneyTable td:nth-child(4) { grid-column:1; }
+            #disneyTable td:nth-child(5) { grid-column:2; }
+            #disneyTable td:nth-child(6) {
+                grid-column:1/-1;
+                background:rgba(0,0,0,.15); border-top:1px solid var(--border);
+                padding:10px 14px;
+            }
+            #anomalyTable td:nth-child(1) {
+                grid-column:1;
+                background:rgba(230,57,70,.08); border-bottom:1px solid var(--border);
+                padding:10px 14px;
+            }
+            #anomalyTable td:nth-child(2) {
+                grid-column:2;
+                background:rgba(230,57,70,.08); border-bottom:1px solid var(--border);
+                padding:10px 14px;
+            }
+            #anomalyTable td:nth-child(3) { grid-column:1; }
+            #anomalyTable td:nth-child(4) { grid-column:2; }
+            #anomalyTable td:nth-child(5) { grid-column:1; }
+            #anomalyTable td:nth-child(6) { grid-column:2; }
+            #anomalyTable td:nth-child(7) {
+                grid-column:1/-1;
+                background:rgba(0,0,0,.15); border-top:1px solid var(--border);
+                padding:10px 14px;
+            }
+            .snip { max-width:100%; font-size:.82em; line-height:1.6; word-break:break-word; }
+            .twrap { overflow-x:visible; }
+            .page-nav { flex-wrap:wrap; gap:4px; }
+            .page-nav button { padding:10px 16px; font-size:.9em; min-width:44px; min-height:44px; border-radius:6px; }
+            .cat-grid { grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:8px; }
+            .cat-card { padding:10px; }
+            .cat-card .cnt { font-size:1.4em; }
+        }
+
+        @media(max-width:480px) {
+            .topnav { padding:6px 8px; gap:8px; font-size:.72em; }
+            .header { padding:12px 10px 12px; }
+            .header .brand { font-size:.62em; letter-spacing:2px; }
+            .header h1 { font-size:1.15em; }
+            .header .term-label { font-size:.9em; padding:3px 12px; margin-top:6px; }
+            .header .subtitle { font-size:.75em; }
+            .stats-bar { flex-wrap:wrap; gap:4px; justify-content:center; }
+            .stat { padding:5px 8px; min-width:60px; }
+            .stat .n { font-size:1em; }
+            .stat .l { font-size:.6em; }
+            .container { padding:8px 6px; }
+            .section { padding:10px 8px; border-radius:8px; }
+            .cat-grid { grid-template-columns:1fr 1fr; gap:6px; }
+            .cat-card .cnt { font-size:1.2em; }
+            .cbox canvas { max-height:180px; }
+            .filters input,.filters select { font-size:.85em; padding:10px; }
+            table tr { margin-bottom:10px; border-radius:10px; }
+            table td { font-size:.8em; padding:6px 10px; }
+            table td::before { font-size:.6em; }
+            .snip { font-size:.75em; line-height:1.5; }
+            .page-nav button { padding:8px 12px; font-size:.82em; min-width:40px; min-height:40px; }
+            .evidence-box { padding:10px; margin-bottom:10px; }
+            .evidence-box .ev-head h4 { font-size:.85em; }
+            .evidence-box .ev-quote { font-size:.78em; line-height:1.5; }
+            .evidence-box .ev-docs { font-size:.7em; }
+            .method-box { padding:10px; }
+            .method-box h3 { font-size:.95em; }
+            .method-box p { font-size:.8em; }
+            .method-box .formula { font-size:.6em; }
+            .step-list li { font-size:.8em; padding-left:28px; }
+            .step-list li::before { width:20px; height:20px; font-size:.65em; line-height:20px; }
+            .timeline { padding-left:18px; }
+            .tl-item { margin-bottom:14px; }
+            .tl-content { font-size:.82em; }
+            .pat-grid { gap:10px; }
+            .pat p { font-size:.78em; }
+            .tab-btn { padding:6px 10px; font-size:.72em; }
         }
     </style>
 </head>
@@ -269,7 +403,7 @@
     <div class="method-box">
         <h3>Esempio Pratico</h3>
         <p>Quando cerchiamo la frase <em>"young girl sent to massage"</em> nel database vettoriale:</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0;">
+        <div class="example-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0;">
             <div style="background:#0a0a14;padding:12px;border-radius:6px;border:1px solid #333355;">
                 <div style="color:var(--accent);font-weight:bold;font-size:.85em;margin-bottom:4px;">Query Vector (384-dim)</div>
                 <div style="font-family:monospace;font-size:.75em;color:#888;">[0.0234, -0.1456, 0.0891, ..., 0.0567]</div>
@@ -644,7 +778,7 @@ function renderDisney() {
     const tbody = document.getElementById('disneyBody');
     tbody.innerHTML = slice.map(r => {
         const badge = r.l === 'C' ? '<span class="badge b-crit">CRITICAL</span>' : '<span class="badge b-high">HIGH</span>';
-        return '<tr><td>'+esc(r.c)+'</td><td>'+badge+'</td><td style="font-family:monospace;font-size:.8em;">'+esc(r.d)+'</td><td>'+esc(r.ds)+'</td><td><a class="doj-link" href="'+dojUrl(r.d,r.ds)+'" target="_blank">PDF</a></td><td class="snip">'+esc(r.s)+'</td></tr>';
+        return '<tr><td data-label="Personaggio">'+esc(r.c)+'</td><td data-label="Livello">'+badge+'</td><td data-label="Doc ID" style="font-family:monospace;font-size:.8em;">'+esc(r.d)+'</td><td data-label="Dataset">'+esc(r.ds)+'</td><td data-label="DOJ"><a class="doj-link" href="'+dojUrl(r.d,r.ds)+'" target="_blank">PDF</a></td><td data-label="Snippet" class="snip">'+esc(r.s)+'</td></tr>';
     }).join('');
     // Pagination
     const totalPages = Math.ceil(disneyData.length / DPAGE);
@@ -707,7 +841,7 @@ function renderAnomaly() {
     const tbody = document.getElementById('anomalyBody');
     tbody.innerHTML = slice.map(r => {
         const catCls = r.cat === 'exploitation_minors' ? 'b-exploit' : r.cat === 'code_names_people' ? 'b-code' : r.cat === 'transactional' ? 'b-trans' : 'b-groom';
-        return '<tr><td><strong>'+(r.v).toFixed(3)+'</strong></td><td><span class="badge '+catCls+'">'+(catLabels[r.cat]||r.cat)+'</span></td><td style="font-family:monospace;font-size:.8em;">'+esc(r.d)+'</td><td>'+esc(r.ds)+'</td><td><a class="doj-link" href="'+dojUrl(r.d,r.ds)+'" target="_blank">PDF</a></td><td style="font-size:.8em;color:var(--dim);max-width:150px;">'+esc(r.q)+'</td><td class="snip">'+esc(r.t)+'</td></tr>';
+        return '<tr><td data-label="Rilevanza"><strong>'+(r.v).toFixed(3)+'</strong></td><td data-label="Categoria"><span class="badge '+catCls+'">'+(catLabels[r.cat]||r.cat)+'</span></td><td data-label="Doc ID" style="font-family:monospace;font-size:.8em;">'+esc(r.d)+'</td><td data-label="Dataset">'+esc(r.ds)+'</td><td data-label="DOJ"><a class="doj-link" href="'+dojUrl(r.d,r.ds)+'" target="_blank">PDF</a></td><td data-label="Query" style="font-size:.8em;color:var(--dim);max-width:150px;">'+esc(r.q)+'</td><td data-label="Testo" class="snip">'+esc(r.t)+'</td></tr>';
     }).join('');
     const totalPages = Math.ceil(anomalyData.length / APAGE);
     const nav = document.getElementById('anomalyPages');
