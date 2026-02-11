@@ -144,30 +144,61 @@
             .pat p { font-size:.82em; }
 
             table thead { display:none; }
-            table, table tbody, table tr, table td { display:block; width:100%; }
+            table, table tbody { display:block; width:100%; }
             table tr {
+                display:grid; grid-template-columns:1fr 1fr;
                 background:var(--surface2); border:1px solid var(--border);
-                border-radius:10px; margin-bottom:12px; padding:14px;
-                position:relative;
+                border-radius:12px; margin-bottom:14px;
+                overflow:hidden;
             }
             table tr:hover { background:var(--surface2); }
+
             table td {
-                display:flex; justify-content:space-between; align-items:flex-start;
-                padding:6px 0; border-bottom:1px solid rgba(255,255,255,.06);
-                font-size:.85em;
+                display:block; padding:8px 14px; border-bottom:none; font-size:.85em;
             }
-            table td:first-child { display:none; }
-            table td:last-child { border-bottom:none; }
             table td::before {
                 content:attr(data-label);
-                font-weight:bold; color:var(--accent2); font-size:.75em;
-                text-transform:uppercase; letter-spacing:.5px;
-                min-width:85px; flex-shrink:0; padding-right:8px;
-                padding-top:2px;
+                display:block; font-size:.65em; font-weight:700;
+                color:var(--accent2); text-transform:uppercase;
+                letter-spacing:.8px; margin-bottom:2px; opacity:.85;
             }
-            table td.ctx { flex-direction:column; }
-            table td.ctx::before { margin-bottom:4px; }
-            .ctx { max-width:100%; font-size:.82em; line-height:1.5; word-break:break-word; }
+
+            /* # — nascosto */
+            table td:nth-child(1) { display:none; }
+
+            /* Doc ID — header della card, full width */
+            table td:nth-child(2) {
+                grid-column:1/-1;
+                background:rgba(42,157,143,.08); border-bottom:1px solid var(--border);
+                padding:10px 14px;
+            }
+            table td:nth-child(2)::before { color:var(--accent3); }
+            table td:nth-child(2) .dlink { font-size:1em; }
+
+            /* Dataset + Mittente affiancati */
+            table td:nth-child(3) { grid-column:1; }
+            table td:nth-child(4) { grid-column:2; }
+
+            /* Anno + Categoria affiancati */
+            table td:nth-child(5) { grid-column:1; }
+            table td:nth-child(6) { grid-column:2; }
+
+            /* Sentiment — riga intera, inline con badge */
+            table td:nth-child(7) {
+                grid-column:1/-1; padding:6px 14px;
+                display:flex; align-items:center; gap:8px;
+                border-top:1px solid rgba(255,255,255,.04);
+            }
+            table td:nth-child(7)::before { display:inline; margin-bottom:0; }
+
+            /* Contesto — footer della card */
+            table td:nth-child(8) {
+                grid-column:1/-1;
+                background:rgba(0,0,0,.15); border-top:1px solid var(--border);
+                padding:10px 14px;
+            }
+
+            .ctx { max-width:100%; font-size:.82em; line-height:1.6; word-break:break-word; }
             .twrap { overflow-x:visible; }
 
             .pag { flex-wrap:wrap; gap:4px; }
@@ -192,10 +223,12 @@
             .cbox canvas { max-height:180px; }
             .filters input,.filters select { font-size:.85em; padding:10px; }
 
-            table tr { padding:10px; margin-bottom:10px; border-radius:8px; }
-            table td { font-size:.8em; padding:5px 0; }
-            table td::before { font-size:.7em; min-width:75px; }
-            .ctx { font-size:.78em; }
+            table tr { margin-bottom:10px; border-radius:10px; }
+            table td { font-size:.8em; padding:6px 10px; }
+            table td:nth-child(2) { padding:8px 10px; }
+            table td:nth-child(8) { padding:8px 10px; }
+            table td::before { font-size:.6em; }
+            .ctx { font-size:.75em; line-height:1.5; }
 
             .pag button { padding:8px 12px; font-size:.82em; min-width:40px; min-height:40px; }
         }
