@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PARRHESEPSTEIN &mdash; Bridging Analysis</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <style>
+        :root {
+            --bg: #08080d; --surface: #10101a; --surface2: #181828;
+            --border: #252540; --accent: #e63946; --accent2: #f4a261;
+            --accent3: #2a9d8f; --text: #ddd; --dim: #777; --gold: #f1c40f;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-width:0; overflow-x:hidden; }
+
+        .topnav {
+            background:#060609; border-bottom:1px solid var(--border);
+            padding:8px 20px; display:flex; gap:18px; align-items:center; font-size:.85em;
+        }
+        .topnav a { color:var(--dim); text-decoration:none; transition:color .2s; }
+        .topnav a:hover { color:var(--accent); }
+        .topnav a.active { color:#e63946; font-weight:bold; border-bottom:2px solid #e63946; padding-bottom:2px; }
+
+        .header {
+            background: linear-gradient(135deg,#120808,#080812);
+            border-bottom: 3px solid var(--accent);
+            padding: 35px 40px 25px; text-align: center;
+        }
+        .header .brand { font-size:.85em; letter-spacing:6px; color:var(--dim); text-transform:uppercase; }
+        .header h1 { font-size:2.6em; color:var(--accent); letter-spacing:3px; margin:4px 0; }
+        .header .term-label {
+            display:inline-block; margin-top:10px; padding:6px 24px;
+            background:rgba(230,57,70,.15); border:1px solid var(--accent);
+            border-radius:20px; font-size:1.3em; color:#ff6b6b; font-weight:bold; letter-spacing:2px;
+        }
+        .header .subtitle { color:var(--dim); margin-top:8px; font-size:.95em; font-style:italic; }
+        .stats-bar { display:flex; justify-content:center; gap:30px; margin-top:20px; flex-wrap:wrap; }
+        .stat { background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:10px 22px; text-align:center; }
+        .stat .n { font-size:1.9em; font-weight:bold; color:var(--accent2); }
+        .stat .l { font-size:.8em; color:var(--dim); }
+
+        .container { max-width:1650px; margin:0 auto; padding:20px 25px; width:100%; min-width:0; }
+
+        .section {
+            background:var(--surface); border:1px solid var(--border);
+            border-radius:10px; padding:22px; margin-bottom:22px; min-width:0; overflow:hidden;
+        }
+        .section h2 { color:var(--accent2); font-size:1.3em; margin-bottom:12px; border-bottom:1px solid var(--border); padding-bottom:8px; }
+
+        /* METHODOLOGY */
+        .method-box {
+            background:var(--surface2); border:1px solid var(--border);
+            border-radius:8px; padding:20px; margin-bottom:16px;
+        }
+        .method-box h3 { color:var(--accent3); font-size:1.05em; margin-bottom:10px; }
+        .method-box p { font-size:.9em; line-height:1.7; margin-bottom:8px; }
+        .formula {
+            background:#0a0a14; border:1px solid #333355; border-radius:8px;
+            padding:18px 24px; margin:14px 0; text-align:center;
+            font-size:1.1em; overflow-x:auto;
+        }
+        .formula-desc { font-size:.82em; color:var(--dim); text-align:center; margin-top:6px; }
+        .step-list { list-style:none; counter-reset:step; }
+        .step-list li { counter-increment:step; margin-bottom:10px; padding-left:36px; position:relative; font-size:.9em; line-height:1.6; }
+        .step-list li::before {
+            content:counter(step); position:absolute; left:0; top:0;
+            width:24px; height:24px; border-radius:50%;
+            background:var(--accent); color:#fff; text-align:center;
+            font-size:.75em; line-height:24px; font-weight:bold;
+        }
+
+        /* EVIDENCE */
+        .evidence-box {
+            background:var(--surface2); border-left:4px solid var(--accent);
+            border-radius:0 8px 8px 0; padding:16px 18px; margin-bottom:14px;
+        }
+        .evidence-box.bridge { border-left-color:var(--accent3); }
+        .evidence-box.intersection { border-left-color:var(--gold); }
+        .evidence-box .ev-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:8px; }
+        .evidence-box .ev-head h4 { color:var(--accent); font-size:.95em; }
+        .evidence-box.bridge .ev-head h4 { color:var(--accent3); }
+        .evidence-box.intersection .ev-head h4 { color:var(--gold); }
+        .evidence-box .ev-sims { font-size:.78em; color:var(--dim); font-family:monospace; }
+        .evidence-box .ev-quote { font-style:italic; color:#ccc; line-height:1.6; font-size:.9em; border-left:3px solid var(--border); padding-left:12px; margin:8px 0; }
+        .evidence-box .ev-quote .hl { background:rgba(230,57,70,.3); color:#ff6b6b; font-weight:bold; padding:1px 4px; border-radius:2px; font-style:normal; }
+        .evidence-box .ev-quote .hl2 { background:rgba(42,157,143,.25); color:#5ec4b6; font-weight:bold; padding:1px 4px; border-radius:2px; font-style:normal; }
+        .evidence-box .ev-analysis { font-size:.85em; color:var(--accent2); margin-top:6px; }
+        .evidence-box .ev-docs { font-size:.78em; color:var(--dim); margin-top:4px; }
+        .evidence-box .ev-docs a { color:var(--accent3); text-decoration:none; font-family:monospace; }
+        .evidence-box .ev-docs a:hover { text-decoration:underline; }
+
+        /* BRIDGE PAIR HEADER */
+        .bridge-pair {
+            background:var(--surface2); border:1px solid var(--border); border-radius:10px;
+            padding:18px 22px; margin-bottom:18px;
+        }
+        .bridge-pair .pair-header {
+            display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;
+            margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--border);
+        }
+        .bridge-pair .pair-title { font-size:1.1em; font-weight:bold; }
+        .bridge-pair .pair-title .c1 { color:var(--accent); }
+        .bridge-pair .pair-title .c2 { color:var(--accent3); }
+        .bridge-pair .pair-title .arrow { color:var(--dim); margin:0 6px; }
+        .bridge-pair .pair-corr { font-family:monospace; font-size:.9em; }
+        .bridge-pair .pair-corr .val { color:var(--accent2); font-weight:bold; }
+        .bridge-pair .pair-stats { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:12px; font-size:.85em; }
+        .bridge-pair .pair-stats .ps { background:var(--bg); padding:4px 12px; border-radius:4px; border:1px solid var(--border); }
+        .bridge-pair .pair-stats .ps strong { color:var(--accent2); }
+
+        /* MATRIX */
+        .matrix-wrap { overflow-x:auto; margin:14px 0; }
+        .matrix-wrap table { border-collapse:collapse; font-size:.72em; width:auto; }
+        .matrix-wrap th, .matrix-wrap td { padding:6px 4px; text-align:center; white-space:nowrap; border:1px solid var(--border); }
+        .matrix-wrap th { background:var(--surface2); color:var(--accent2); font-size:.85em; writing-mode:vertical-rl; text-orientation:mixed; min-width:32px; }
+        .matrix-wrap th.row-head { writing-mode:horizontal-tb; text-align:right; padding-right:8px; color:var(--text); font-size:.82em; }
+
+        /* CHARTS */
+        .charts { display:grid; grid-template-columns:1fr 1fr; gap:22px; margin-bottom:22px; }
+        .cbox { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px; min-width:0; overflow:hidden; }
+        .cbox h3 { color:var(--accent2); font-size:1em; margin-bottom:8px; }
+        .cbox canvas { max-height:300px; width:100% !important; }
+
+        /* CONCEPT GRID */
+        .concept-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(280px,1fr)); gap:12px; margin:14px 0; }
+        .concept-card {
+            background:var(--bg); border:1px solid var(--border); border-radius:8px;
+            padding:12px 14px; border-left:3px solid var(--accent3);
+        }
+        .concept-card h4 { color:var(--accent3); font-size:.9em; margin-bottom:6px; }
+        .concept-card ul { list-style:none; font-size:.78em; color:var(--dim); }
+        .concept-card ul li { margin-bottom:2px; padding-left:12px; position:relative; }
+        .concept-card ul li::before { content:'\203A'; position:absolute; left:0; color:var(--accent3); }
+
+        /* PATTERNS */
+        .pat-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+        .pat { background:var(--surface2); padding:14px; border-radius:8px; }
+        .pat h4 { color:var(--accent2); margin-bottom:6px; font-size:.95em; }
+        .pat p { font-size:.88em; line-height:1.5; }
+        .pat .num { color:var(--accent); font-weight:bold; font-size:1.1em; }
+
+        .badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:.75em; font-weight:bold; }
+        .b-bridge { background:rgba(42,157,143,.2); color:#2a9d8f; border:1px solid #2a9d8f; }
+        .b-inter { background:rgba(241,196,15,.2); color:#f1c40f; border:1px solid #f1c40f; }
+        .b-strat1 { background:rgba(42,157,143,.15); color:#2a9d8f; }
+        .b-strat2 { background:rgba(241,196,15,.15); color:#f1c40f; }
+
+        .footer { text-align:center; padding:30px; color:var(--dim); font-size:.8em; border-top:1px solid var(--border); margin-top:30px; }
+
+        /* RESPONSIVE */
+        @media(max-width:900px) {
+            .charts,.pat-grid { grid-template-columns:1fr; }
+            .header { padding:20px 15px 18px; }
+            .header h1 { font-size:1.8em; }
+            .container { padding:12px 10px; }
+            .method-box .formula { font-size:.85em; padding:12px 10px; }
+            .concept-grid { grid-template-columns:1fr 1fr; }
+        }
+        @media(max-width:768px) {
+            .topnav { padding:8px 10px; gap:10px; font-size:.78em; flex-wrap:wrap; }
+            .header { padding:16px 12px 14px; }
+            .header .brand { font-size:.7em; letter-spacing:3px; }
+            .header h1 { font-size:1.4em; letter-spacing:1px; }
+            .header .term-label { font-size:1em; padding:4px 16px; }
+            .header .subtitle { font-size:.82em; }
+            .stats-bar { gap:6px; }
+            .stat { padding:6px 10px; flex:1; min-width:70px; }
+            .stat .n { font-size:1.2em; }
+            .stat .l { font-size:.68em; }
+            .section { padding:14px 10px; margin-bottom:14px; }
+            .section h2 { font-size:1.1em; }
+            .evidence-box { padding:12px 14px; }
+            .evidence-box .ev-quote { font-size:.82em; padding-left:8px; }
+            .evidence-box .ev-docs { word-break:break-all; }
+            .method-box { padding:14px; }
+            .method-box p { font-size:.85em; }
+            .method-box .formula { font-size:.75em; padding:10px 8px; overflow-x:auto; }
+            .step-list li { padding-left:30px; font-size:.85em; }
+            .bridge-pair { padding:12px 14px; }
+            .bridge-pair .pair-title { font-size:.95em; }
+            .concept-grid { grid-template-columns:1fr; }
+            .matrix-wrap table { font-size:.6em; }
+            .matrix-wrap th, .matrix-wrap td { padding:3px 2px; }
+        }
+        @media(max-width:480px) {
+            .topnav { padding:6px 8px; gap:8px; font-size:.72em; }
+            .header { padding:12px 10px 12px; }
+            .header .brand { font-size:.62em; letter-spacing:2px; }
+            .header h1 { font-size:1.15em; }
+            .header .term-label { font-size:.9em; padding:3px 12px; margin-top:6px; }
+            .header .subtitle { font-size:.75em; }
+            .stats-bar { flex-wrap:wrap; gap:4px; justify-content:center; }
+            .stat { padding:5px 8px; min-width:60px; }
+            .stat .n { font-size:1em; }
+            .stat .l { font-size:.6em; }
+            .container { padding:8px 6px; }
+            .section { padding:10px 8px; border-radius:8px; }
+            .evidence-box { padding:10px; margin-bottom:10px; }
+            .evidence-box .ev-head h4 { font-size:.85em; }
+            .evidence-box .ev-quote { font-size:.78em; line-height:1.5; }
+            .evidence-box .ev-docs { font-size:.7em; }
+            .method-box { padding:10px; }
+            .method-box h3 { font-size:.95em; }
+            .method-box p { font-size:.8em; }
+            .method-box .formula { font-size:.6em; }
+            .step-list li { font-size:.8em; padding-left:28px; }
+            .pat-grid { gap:10px; }
+            .pat p { font-size:.78em; }
+            .bridge-pair .pair-stats { font-size:.78em; gap:8px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="topnav">
+    <a href="index.html">Analisi "Whoops"</a>
+    <a href="snow-white.html">Analisi "Snow White"</a>
+    <a href="code-language.html">Linguaggio in Codice</a>
+    <a href="bridging-analysis.html" class="active">Bridging Analysis</a>
+</nav>
+
+<div class="header">
+    <div class="brand">PARRHESEPSTEIN &mdash; Analisi Forense Documentale</div>
+    <h1>BRIDGING ANALYSIS</h1>
+    <div class="term-label">Documenti Ponte tra Concetti Disconnessi</div>
+    <div class="subtitle">Ricerca matematica dei documenti che collegano mondi semanticamente separati nel corpus Epstein</div>
+    <div class="stats-bar">
+        <div class="stat"><div class="n">3,140,085</div><div class="l">Chunk Analizzati</div></div>
+        <div class="stat"><div class="n">14</div><div class="l">Concetti Mappati</div></div>
+        <div class="stat"><div class="n">15</div><div class="l">Coppie Analizzate</div></div>
+        <div class="stat"><div class="n">384</div><div class="l">Dimensioni Vettoriali</div></div>
+        <div class="stat"><div class="n">34</div><div class="l">Documenti Intersezione</div></div>
+    </div>
+</div>
+
+<div class="container">
+
+<!-- ===== METHODOLOGY ===== -->
+<div class="section" id="methodology">
+    <h2>Metodologia &mdash; La Matematica del Bridging</h2>
+
+    <div class="method-box">
+        <h3>Idea Centrale</h3>
+        <p>Nei 3.14 milioni di frammenti Epstein, i documenti su <strong>abusi sessuali</strong> e quelli su <strong>transazioni finanziarie</strong>
+        vivono in regioni completamente diverse dello spazio vettoriale a 384 dimensioni (correlazione &asymp; &minus;0.004).
+        Eppure, se esistono documenti che parlano di <em>entrambe le cose</em>, questi sono potenzialmente i pi&ugrave; rivelatori:
+        collegano mondi che nel corpus sono normalmente disconnessi.</p>
+        <p>Il <strong>Bridging Analysis</strong> cerca sistematicamente questi <em>documenti ponte</em> &mdash;
+        frammenti di testo che sono simultaneamente vicini a due concetti a bassa correlazione.</p>
+    </div>
+
+    <div class="method-box">
+        <h3>Fase 1: Costruzione dei Vettori Concetto</h3>
+        <p>Ogni concetto investigativo (es. "Reclutamento minori") viene descritto con 4 formulazioni diverse in linguaggio naturale.
+        Queste vengono convertite in vettori a 384 dimensioni e poi <strong>mediate</strong> per creare un singolo <em>vettore concetto</em>:</p>
+        <div class="formula" id="formula-concept"></div>
+        <div class="formula-desc">dove q<sub>1</sub>...q<sub>4</sub> sono le 4 formulazioni del concetto e E(&middot;) &egrave; la funzione di embedding</div>
+        <ol class="step-list">
+            <li>Per ogni concetto, scriviamo 4 frasi che ne catturano sfumature diverse (es. <em>"recruiting underage girls"</em>, <em>"bringing young girls to the house"</em>, ecc.)</li>
+            <li>Ogni frase viene trasformata in un vettore a 384 dimensioni dal modello <code>paraphrase-multilingual-MiniLM-L12-v2</code></li>
+            <li>I 4 vettori vengono mediati e ri-normalizzati per ottenere un unico vettore concetto unitario</li>
+        </ol>
+    </div>
+
+    <div class="method-box">
+        <h3>Fase 2: Matrice di Correlazione tra Concetti</h3>
+        <p>Calcoliamo la <strong>similarit&agrave; coseno</strong> tra tutte le coppie di vettori concetto per trovare quali concetti vivono in regioni
+        separate dello spazio vettoriale:</p>
+        <div class="formula" id="formula-cosine"></div>
+        <div class="formula-desc">dove V<sub>i</sub> e V<sub>j</sub> sono vettori concetto a 384 dimensioni</div>
+        <p style="margin-top:10px;">Le coppie con correlazione vicina a <strong>zero o negativa</strong> sono quelle pi&ugrave; interessanti:
+        significa che i due concetti non hanno quasi nessun documento in comune. Se ne troviamo uno, &egrave; un <em>ponte</em>.</p>
+    </div>
+
+    <div class="method-box">
+        <h3>Fase 3: Strategia del Vettore Medio (Midpoint)</h3>
+        <p>Per trovare documenti equidistanti da due concetti, calcoliamo il <strong>punto medio</strong> nello spazio vettoriale:</p>
+        <div class="formula" id="formula-midpoint"></div>
+        <div class="formula-desc">il vettore ponte punta nella direzione intermedia tra i due concetti nello spazio a 384 dimensioni</div>
+        <p style="margin-top:10px;">Cerchiamo nel database i documenti pi&ugrave; vicini a questo vettore medio, poi <strong>filtriamo</strong>:
+        un documento ponte valido deve avere similarit&agrave; &ge; 0.15 con <em>entrambi</em> i concetti, non solo con il punto medio.</p>
+    </div>
+
+    <div class="method-box">
+        <h3>Fase 4: Strategia dell'Intersezione</h3>
+        <p>Approccio complementare: cerchiamo <em>indipendentemente</em> i 200 documenti pi&ugrave; vicini a ciascun concetto,
+        poi cerchiamo quelli che appaiono in <strong>entrambe le liste</strong>:</p>
+        <div class="formula" id="formula-intersection"></div>
+        <div class="formula-desc">i documenti nell'intersezione sono quelli che il database vettoriale considera rilevanti per entrambi i concetti</div>
+        <p style="margin-top:10px;">Questi documenti vengono ordinati per <code>min(sim<sub>C1</sub>, sim<sub>C2</sub>)</code> &mdash;
+        il documento migliore &egrave; quello che massimizza la sua similarit&agrave; <em>minima</em> con i due concetti.</p>
+    </div>
+
+    <div class="method-box">
+        <h3>Esempio Visivo</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:10px 0;" class="example-grid">
+            <div style="background:#0a0a14;padding:14px;border-radius:6px;border:1px solid var(--accent);text-align:center;">
+                <div style="color:var(--accent);font-weight:bold;font-size:.85em;margin-bottom:6px;">Concetto A</div>
+                <div style="font-size:.78em;color:#bbb;">"Reclutamento minori"</div>
+                <div style="font-family:monospace;font-size:.65em;color:#666;margin-top:4px;">[0.23, -0.14, 0.08, ..., 0.05]</div>
+            </div>
+            <div style="background:#0a0a14;padding:14px;border-radius:6px;border:1px solid var(--gold);text-align:center;">
+                <div style="color:var(--gold);font-weight:bold;font-size:.85em;margin-bottom:6px;">Documento Ponte</div>
+                <div style="font-size:.78em;color:#bbb;">"QAT Consulting: $400K a 50+ prostitute"</div>
+                <div style="font-size:.72em;color:var(--accent3);margin-top:4px;">sim<sub>A</sub>=0.33 &bull; sim<sub>B</sub>=0.48</div>
+            </div>
+            <div style="background:#0a0a14;padding:14px;border-radius:6px;border:1px solid var(--accent3);text-align:center;">
+                <div style="color:var(--accent3);font-weight:bold;font-size:.85em;margin-bottom:6px;">Concetto B</div>
+                <div style="font-size:.78em;color:#bbb;">"Transazioni finanziarie"</div>
+                <div style="font-family:monospace;font-size:.65em;color:#666;margin-top:4px;">[-0.11, 0.31, -0.05, ..., 0.19]</div>
+            </div>
+        </div>
+        <p style="text-align:center;font-size:.85em;color:var(--dim);margin-top:8px;">Correlazione tra A e B: &minus;0.02 (quasi zero) &mdash; eppure il documento EFTA00191587 parla di entrambi</p>
+    </div>
+</div>
+
+<!-- ===== 14 CONCEPTS ===== -->
+<div class="section" id="concepts">
+    <h2>I 14 Concetti Investigativi</h2>
+    <p style="font-size:.9em;color:var(--dim);margin-bottom:14px;">Ogni concetto &egrave; stato definito con 4 formulazioni semantiche diverse per catturare sfumature multiple.</p>
+    <div class="concept-grid">
+        <div class="concept-card"><h4>Reclutamento minori</h4><ul>
+            <li>Recruiting underage girls for sexual purposes</li>
+            <li>Bringing young girls to the house for massages</li>
+            <li>Finding new girls, teenagers, recruitment</li>
+            <li>She was asked to bring her friends</li>
+        </ul></div>
+        <div class="concept-card"><h4>Pagamenti a vittime</h4><ul>
+            <li>Cash payments to young women after massage</li>
+            <li>Money given to girls for sexual services</li>
+            <li>Paid hundreds of dollars for massage</li>
+            <li>Financial compensation to victims</li>
+        </ul></div>
+        <div class="concept-card"><h4>Abusi durante massaggi</h4><ul>
+            <li>Sexual abuse during massage session</li>
+            <li>He would touch her inappropriately during massage</li>
+            <li>Forced sexual contact massage table</li>
+            <li>Masturbation during massage encounter</li>
+        </ul></div>
+        <div class="concept-card"><h4>Traffico internazionale</h4><ul>
+            <li>Transporting minors across state lines for sex</li>
+            <li>Flying girls to private island</li>
+            <li>International sex trafficking of underage victims</li>
+            <li>Bringing girls from overseas</li>
+        </ul></div>
+        <div class="concept-card"><h4>Copertura e insabbiamento</h4><ul>
+            <li>Destroying evidence obstruction of justice</li>
+            <li>Witness intimidation threats silence</li>
+            <li>Non-prosecution agreement plea deal cover up</li>
+            <li>Police corruption turning a blind eye</li>
+        </ul></div>
+        <div class="concept-card"><h4>Rete di complici</h4><ul>
+            <li>Ghislaine Maxwell recruiting girls procuring</li>
+            <li>Assistants scheduling massage appointments</li>
+            <li>Staff enabling facilitating access to minors</li>
+            <li>Co-conspirators helping Epstein abuse victims</li>
+        </ul></div>
+        <div class="concept-card"><h4>Ricatto e sorveglianza</h4><ul>
+            <li>Hidden cameras recording sexual encounters</li>
+            <li>Blackmail compromising material powerful people</li>
+            <li>Surveillance recordings secret tapes</li>
+            <li>Using recordings as leverage against visitors</li>
+        </ul></div>
+        <div class="concept-card"><h4>Connessioni con potenti</h4><ul>
+            <li>Meetings with politicians presidents royalty</li>
+            <li>Powerful people visiting the island private jet</li>
+            <li>Billionaire connections political influence</li>
+            <li>Donations to politicians for protection</li>
+        </ul></div>
+        <div class="concept-card"><h4>Vittime &mdash; testimonianze</h4><ul>
+            <li>I was only fifteen when he first abused me</li>
+            <li>She described being forced to perform sexual acts</li>
+            <li>Victim testimony describing the abuse pattern</li>
+            <li>I was recruited by another girl</li>
+        </ul></div>
+        <div class="concept-card"><h4>Propriet&agrave; e luoghi</h4><ul>
+            <li>Little Saint James island compound temple</li>
+            <li>71st street New York mansion</li>
+            <li>Zorro Ranch New Mexico property</li>
+            <li>Palm Beach Florida residence pool house</li>
+        </ul></div>
+        <div class="concept-card"><h4>Transazioni finanziarie</h4><ul>
+            <li>Wire transfer offshore account suspicious</li>
+            <li>Shell company money laundering hidden assets</li>
+            <li>Large cash withdrawal unexplained payment</li>
+            <li>Financial structure designed to hide wealth</li>
+        </ul></div>
+        <div class="concept-card"><h4>Pattern comportamentali</h4><ul>
+            <li>A pattern of grooming vulnerable young girls</li>
+            <li>Escalating sexual demands starting with massage</li>
+            <li>Using money and gifts to manipulate teenagers</li>
+            <li>Creating dependency and control over victims</li>
+        </ul></div>
+        <div class="concept-card"><h4>Nomi specifici &mdash; persone chiave</h4><ul>
+            <li>Prince Andrew Duke of York allegations</li>
+            <li>Bill Clinton flight logs Lolita Express</li>
+            <li>Alan Dershowitz defense lawyer accusations</li>
+            <li>Les Wexner financial relationship</li>
+        </ul></div>
+        <div class="concept-card"><h4>Voli e spostamenti</h4><ul>
+            <li>Flight log passenger manifest private jet</li>
+            <li>Lolita Express Boeing 727 travel records</li>
+            <li>Helicopter landing Little Saint James</li>
+            <li>Teterboro airport departure arrival</li>
+        </ul></div>
+    </div>
+</div>
+
+<!-- ===== CORRELATION MATRIX ===== -->
+<div class="section" id="correlation">
+    <h2>Matrice di Correlazione tra Concetti</h2>
+    <p style="font-size:.9em;color:var(--dim);margin-bottom:14px;">Similarit&agrave; coseno tra i 14 vettori concetto. I valori vicini a zero (celle scure) indicano concetti che vivono in regioni completamente separate dello spazio vettoriale &mdash; le coppie pi&ugrave; interessanti per il bridging.</p>
+
+    <div class="charts">
+        <div class="cbox">
+            <h3>Coppie pi&ugrave; correlate</h3>
+            <canvas id="chartHigh"></canvas>
+        </div>
+        <div class="cbox">
+            <h3>Coppie meno correlate (target del bridging)</h3>
+            <canvas id="chartLow"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- ===== TOP BRIDGE DOCUMENTS ===== -->
+<div class="section" id="bridges">
+    <h2>I Documenti Ponte pi&ugrave; Significativi</h2>
+    <p style="font-size:.9em;color:var(--dim);margin-bottom:14px;">
+        Documenti che collegano concetti normalmente separati nello spazio vettoriale.
+        <span class="badge b-bridge">MIDPOINT</span> = trovato con strategia vettore medio &bull;
+        <span class="badge b-inter">INTERSEZIONE</span> = presente nei top-200 di entrambi i concetti.
+    </p>
+
+    <!-- BRIDGE: Reclutamento <-> Transazioni finanziarie -->
+    <div class="bridge-pair">
+        <div class="pair-header">
+            <div class="pair-title"><span class="c1">Reclutamento minori</span><span class="arrow">&harr;</span><span class="c2">Transazioni finanziarie</span></div>
+            <div class="pair-corr">correlazione: <span class="val">&minus;0.02</span></div>
+        </div>
+        <div class="pair-stats">
+            <div class="ps">Intersezione: <strong>0 documenti</strong></div>
+            <div class="ps">Strategia midpoint: <strong>10 documenti</strong></div>
+        </div>
+
+        <div class="evidence-box bridge">
+            <div class="ev-head">
+                <h4>"QAT Consulting" &mdash; $400K+ a 50+ prostitute via shell company</h4>
+                <span class="badge b-bridge">MIDPOINT</span>
+            </div>
+            <div class="ev-sims">sim<sub>Reclutamento</sub>=0.3326 &bull; sim<sub>Transazioni</sub>=0.4819 &bull; min=0.3326</div>
+            <div class="ev-quote">
+                Cecil Suwal, a/k/a "Katie," the defendant, wrote <span class="hl">checks and sent wire transfers totaling more than $400,000</span>
+                from bank accounts in the name of <span class="hl2">"QAT Consulting Group, Inc."</span> and "QAT International, Inc.,"
+                to <span class="hl">more than 50 prostitutes</span> working with the Emperors Club in the United States and Europe.
+            </div>
+            <div class="ev-analysis">Shell company usata come copertura finanziaria per pagare la rete di sfruttamento. Collega direttamente entit&agrave; finanziarie fittizie al trafficking.</div>
+            <div class="ev-docs">Doc: <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00191587.pdf" target="_blank">EFTA00191587</a> &bull; DataSet_9</div>
+        </div>
+
+        <div class="evidence-box bridge">
+            <div class="ev-head">
+                <h4>Southern Trust Company + "Epstein Enterprise"</h4>
+                <span class="badge b-bridge">MIDPOINT</span>
+            </div>
+            <div class="ev-sims">sim<sub>Reclutamento</sub>=0.3548 &bull; sim<sub>Transazioni</sub>=0.4603 &bull; min=0.3548</div>
+            <div class="ev-quote">
+                Documents that misrepresented that <span class="hl2">Southern Trust Company</span> was engaged in providing consulting services
+                in financial and biomedical informatics. Defendants knowingly benefited financially from participation in the
+                <span class="hl">Epstein Enterprise, which has engaged in human trafficking, forced labor, sexual servitude,
+                and commercial sexual activity of underage girls</span>.
+            </div>
+            <div class="ev-analysis">Querela delle Isole Vergini: entit&agrave; finanziaria fittizia direttamente collegata all'impresa di trafficking.</div>
+            <div class="ev-docs">Doc: <a href="https://www.justice.gov/epstein/files/DataSet%208/EFTA00018778.pdf" target="_blank">EFTA00018778</a> &bull; DataSet_8</div>
+        </div>
+
+        <div class="evidence-box bridge">
+            <div class="ev-head">
+                <h4>Registro pagamenti in finta bibbia</h4>
+                <span class="badge b-bridge">MIDPOINT</span>
+            </div>
+            <div class="ev-sims">sim<sub>Reclutamento</sub>=0.4035 &bull; sim<sub>Transazioni</sub>=0.3957 &bull; min=0.3957</div>
+            <div class="ev-quote">
+                During deposition the girls admitted that they had been <span class="hl">call girl, strippers, since the age of 15</span>.
+                They had worked at various massage parlors, strip clubs, and escort services.
+                One admitted to <span class="hl2">keeping the record of the payment of her Johns fees in a lined book masquerading as a bible</span>.
+            </div>
+            <div class="ev-analysis">Testimonianza di deposizione che collega direttamente le vittime minorenni con un sistema di tracciamento finanziario dei pagamenti.</div>
+            <div class="ev-docs">Doc: <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00583467.pdf" target="_blank">EFTA00583467</a> &bull; DataSet_9</div>
+        </div>
+    </div>
+
+    <!-- BRIDGE: Abusi <-> Connessioni potenti -->
+    <div class="bridge-pair">
+        <div class="pair-header">
+            <div class="pair-title"><span class="c1">Abusi durante massaggi</span><span class="arrow">&harr;</span><span class="c2">Connessioni con potenti</span></div>
+            <div class="pair-corr">correlazione: <span class="val">&minus;0.02</span></div>
+        </div>
+        <div class="pair-stats">
+            <div class="ps">Intersezione: <strong>1 documento</strong></div>
+            <div class="ps">Strategia midpoint: <strong>10 documenti</strong></div>
+        </div>
+
+        <div class="evidence-box bridge">
+            <div class="ev-head">
+                <h4>Bill Clinton menzionato durante i massaggi-abuso</h4>
+                <span class="badge b-bridge">MIDPOINT</span>
+            </div>
+            <div class="ev-sims">sim<sub>Abusi</sub>=0.4122 &bull; sim<sub>Potenti</sub>=0.3684 &bull; min=0.3684</div>
+            <div class="ev-quote">
+                EPSTEIN would chat during the massages and talk about helping future career and all the people he knew
+                to include <span class="hl2">politicians and models, specifically Bill Clinton</span>, however over time,
+                the talking became less and less. [La vittima] stated that EPSTEIN would <span class="hl">ask that she would be topless
+                with her underwear on if she was giving massages</span>.
+            </div>
+            <div class="ev-analysis">Testimonianza FBI: la vittima descrive Epstein che nomina Clinton durante le sessioni di massaggio che degeneravano in abuso.</div>
+            <div class="ev-docs">Doc: <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA01245224.pdf" target="_blank">EFTA01245224</a> &bull; DataSet_9</div>
+        </div>
+
+        <div class="evidence-box bridge">
+            <div class="ev-head">
+                <h4>Clinton, Summers, Trump nella stessa pagina degli abusi</h4>
+                <span class="badge b-bridge">MIDPOINT</span>
+            </div>
+            <div class="ev-sims">sim<sub>Abusi</sub>=0.4120 &bull; sim<sub>Potenti</sub>=0.3474 &bull; min=0.3474</div>
+            <div class="ev-quote">
+                Police took sworn statements from five alleged victims and 17 witnesses. They contend that on three occasions,
+                <span class="hl">Epstein had sex with the girls</span>. He reportedly <span class="hl2">hobnobs with the likes of former President Clinton,
+                former Harvard University President Lawrence Summers and Donald Trump</span>, and has lavish homes in
+                Manhattan, New Mexico and the Virgin Islands.
+            </div>
+            <div class="ev-analysis">Articolo giornalistico: i dettagli degli abusi (dichiarazioni delle vittime alla polizia) nello stesso documento delle connessioni con potenti.</div>
+            <div class="ev-docs">Doc: <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00067339.pdf" target="_blank">EFTA00067339</a> &bull; DataSet_9</div>
+        </div>
+
+        <div class="evidence-box intersection">
+            <div class="ev-head">
+                <h4>Grand Jury Filing &mdash; UNICO documento nell'intersezione</h4>
+                <span class="badge b-inter">INTERSEZIONE</span>
+            </div>
+            <div class="ev-sims">sim<sub>Abusi</sub>=0.6686 &bull; sim<sub>Potenti</sub>=0.5232 &bull; min=0.5232</div>
+            <div class="ev-quote">
+                UNITED STATES DISTRICT COURT, SOUTHERN DISTRICT OF FLORIDA &mdash; IN RE GRAND JURY SUBPOENAS DUCES TECUM &mdash;
+                FILED UNDER SEAL &mdash; Reply of William Riley and Riley Kiraly to the Government's Response to the Motion to Intervene
+                and to Quash Grand Jury Subpoenas and Cross Motion to Compel.
+            </div>
+            <div class="ev-analysis">L'unico documento tra i top-200 di ENTRAMBI i concetti: un filing del Grand Jury sotto sigillo che interseca sia il mondo degli abusi sia le connessioni con i potenti.</div>
+            <div class="ev-docs">Doc: <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00178967.pdf" target="_blank">EFTA00178967</a> &bull; DataSet_9</div>
+        </div>
+    </div>
+
+    <!-- BRIDGE: Pattern <-> Voli -->
+    <div class="bridge-pair">
+        <div class="pair-header">
+            <div class="pair-title"><span class="c1">Pattern comportamentali</span><span class="arrow">&harr;</span><span class="c2">Voli e spostamenti</span></div>
+            <div class="pair-corr">correlazione: <span class="val">&minus;0.08</span></div>
+        </div>
+        <div class="pair-stats">
+            <div class="ps">Intersezione: <strong>0 documenti</strong></div>
+            <div class="ps">Strategia midpoint: <strong>10 documenti</strong></div>
+        </div>
+
+        <div class="evidence-box bridge">
+            <div class="ev-head">
+                <h4>"Flights on HOLD for the Girls"</h4>
+                <span class="badge b-bridge">MIDPOINT</span>
+            </div>
+            <div class="ev-sims">sim<sub>Pattern</sub>=0.3730 &bull; sim<sub>Voli</sub>=0.5174 &bull; min=0.3730</div>
+            <div class="ev-quote">
+                Subject: <span class="hl">Flights on HOLD for the Girls</span> (JTSFGJ)
+            </div>
+            <div class="ev-analysis">Email con oggetto esplicito che collega direttamente i voli privati al trasporto delle vittime. L'acronimo JTSFGJ non &egrave; stato decodificato.</div>
+            <div class="ev-docs">Doc: <a href="https://www.justice.gov/epstein/files/DataSet%2011/EFTA02292503.pdf" target="_blank">EFTA02292503</a> &bull; DataSet_11</div>
+        </div>
+
+        <div class="evidence-box bridge">
+            <div class="ev-head">
+                <h4>Vittima: sesso sugli aerei + pattern di massaggi</h4>
+                <span class="badge b-bridge">MIDPOINT</span>
+            </div>
+            <div class="ev-sims">sim<sub>Pattern</sub>=0.3182 &bull; sim<sub>Voli</sub>=0.4498 &bull; min=0.3182</div>
+            <div class="ev-quote">
+                <span class="hl">Routinely, these massages involved sexual activity</span>. Is that accurate?
+                V: That is accurate. Let's talk about the travel that you were involved in when you were on
+                <span class="hl2">Jeffrey's private plane</span>. Generally speaking, who were the passengers on the plane when you traveled.
+                V: Well, <span class="hl2">Larry was the pilot</span>.
+            </div>
+            <div class="ev-analysis">Deposizione vittima: la conversazione passa direttamente dai massaggi sessuali routinari ai dettagli dei voli privati.</div>
+            <div class="ev-docs">Doc: <a href="https://www.justice.gov/epstein/files/DataSet%2010/EFTA01657683.pdf" target="_blank">EFTA01657683</a> &bull; DataSet_10</div>
+        </div>
+
+        <div class="evidence-box bridge">
+            <div class="ev-head">
+                <h4>"Find young, pretty, white females" + Boeing e Gulfstream</h4>
+                <span class="badge b-bridge">MIDPOINT</span>
+            </div>
+            <div class="ev-sims">sim<sub>Pattern</sub>=0.2351 &bull; sim<sub>Voli</sub>=0.5266 &bull; min=0.2351</div>
+            <div class="ev-quote">
+                Told <span class="hl">to find young, pretty, white females to bring to</span> [redacted].
+                Recalled two aircraft owned by EPSTEIN, <span class="hl2">a 727 and a black Gulfstream</span>.
+                Advised that <span class="hl">sex acts occurred while traveling on the aircraft</span>.
+            </div>
+            <div class="ev-analysis">Intervista FBI: reclutamento mirato e dettagli degli aerei nello stesso documento. Conferma atti sessuali durante i voli.</div>
+            <div class="ev-docs">Doc: <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00269967.pdf" target="_blank">EFTA00269967</a> &bull; DataSet_9</div>
+        </div>
+    </div>
+
+    <!-- BRIDGE: Abusi <-> Proprieta -->
+    <div class="bridge-pair">
+        <div class="pair-header">
+            <div class="pair-title"><span class="c1">Abusi durante massaggi</span><span class="arrow">&harr;</span><span class="c2">Propriet&agrave; e luoghi</span></div>
+            <div class="pair-corr">correlazione: <span class="val">&minus;0.009</span></div>
+        </div>
+        <div class="pair-stats">
+            <div class="ps">Intersezione: <strong>8 documenti</strong> (pi&ugrave; alta)</div>
+            <div class="ps">Strategia midpoint: <strong>10 documenti</strong></div>
+        </div>
+
+        <div class="evidence-box bridge">
+            <div class="ev-head">
+                <h4>Dershowitz: sesso a Zorro Ranch, Little Saint James, e altrove</h4>
+                <span class="badge b-bridge">MIDPOINT</span>
+            </div>
+            <div class="ev-sims">sim<sub>Abusi</sub>=0.5989 &bull; sim<sub>Propriet&agrave;</sub>=0.3083 &bull; min=0.3083</div>
+            <div class="ev-quote">
+                I also had sex with Dershowitz at <span class="hl2">Epstein's Zorro Ranch in New Mexico</span> in the massage room off of the
+                indoor pool area. We also had sex at <span class="hl2">Little Saint James Island</span>. I was asked to
+                <span class="hl">give Dershowitz a massage on the beach</span>. Dershowitz then asked me to take him somewhere more private,
+                where we proceeded to have intercourse.
+            </div>
+            <div class="ev-analysis">Dichiarazione giurata che collega abusi sessuali specifici a propriet&agrave; specifiche di Epstein, con nome del presunto abusatore.</div>
+            <div class="ev-docs">Doc: <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA01112265.pdf" target="_blank">EFTA01112265</a> &bull; DataSet_9</div>
+        </div>
+
+        <div class="evidence-box bridge">
+            <div class="ev-head">
+                <h4>Email Epstein: "build a small spa massage place" sopra la nursery</h4>
+                <span class="badge b-bridge">MIDPOINT</span>
+            </div>
+            <div class="ev-sims">sim<sub>Abusi</sub>=0.4781 &bull; sim<sub>Propriet&agrave;</sub>=0.3787 &bull; min=0.3787</div>
+            <div class="ev-quote">
+                From: Jeffrey Epstein &mdash; To: Gary Kerney &mdash;
+                <span class="hl2">please take photos of the top of the nursery</span>, lets assume i wanted to
+                <span class="hl">build a small spa massage place</span>, so that one would walk up the stairs,
+                and enter a place for spa treatments. etx.
+            </div>
+            <div class="ev-analysis">Email diretta di Epstein: progettava una "sala massaggi" sopra lo spazio della nursery. Il contesto &egrave; inquietante data la funzione reale dei "massaggi".</div>
+            <div class="ev-docs">Doc: <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00894019.pdf" target="_blank">EFTA00894019</a> &bull; DataSet_9</div>
+        </div>
+    </div>
+
+    <!-- BRIDGE: Connessioni potenti <-> Vittime -->
+    <div class="bridge-pair">
+        <div class="pair-header">
+            <div class="pair-title"><span class="c1">Connessioni con potenti</span><span class="arrow">&harr;</span><span class="c2">Vittime &mdash; testimonianze</span></div>
+            <div class="pair-corr">correlazione: <span class="val">0.012</span></div>
+        </div>
+        <div class="pair-stats">
+            <div class="ps">Intersezione: <strong>1 documento</strong></div>
+            <div class="ps">Strategia midpoint: <strong>10 documenti</strong></div>
+        </div>
+
+        <div class="evidence-box bridge">
+            <div class="ev-head">
+                <h4>Prince Andrew: accusato direttamente nel court filing</h4>
+                <span class="badge b-bridge">MIDPOINT</span>
+            </div>
+            <div class="ev-sims">sim<sub>Potenti</sub>=0.4770 &bull; sim<sub>Vittime</sub>=0.3847 &bull; min=0.3847</div>
+            <div class="ev-quote">
+                One such powerful individual Epstein forced Jane Doe #3 to have sexual relations with was
+                <span class="hl2">a member of the British royal family, Prince Andrew (aka Duke of York)</span>.
+                The Duke has been dogged by accusations of a lack of judgment about his links with Epstein since 2011.
+            </div>
+            <div class="ev-analysis">Filing giudiziario che nomina direttamente Prince Andrew come persona con cui una vittima fu costretta ad avere rapporti sessuali.</div>
+            <div class="ev-docs">Doc: <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00583613.pdf" target="_blank">EFTA00583613</a> &bull; DataSet_9</div>
+        </div>
+
+        <div class="evidence-box bridge">
+            <div class="ev-head">
+                <h4>"Politically-connected billionaire" sfuggito alla giustizia</h4>
+                <span class="badge b-bridge">MIDPOINT</span>
+            </div>
+            <div class="ev-sims">sim<sub>Potenti</sub>=0.3665 &bull; sim<sub>Vittime</sub>=0.4852 &bull; min=0.3665</div>
+            <div class="ev-quote">
+                Allowing a <span class="hl2">politically-connected billionaire</span> who had <span class="hl">sexually abused
+                more than 30 identified minor girls</span> to escape from federal prosecution with only a county court jail sentence.
+                Dershowitz's need to keep his abuse of Jane Doe #3 secret provided strong motivation to reach a
+                secret deal.
+            </div>
+            <div class="ev-analysis">Mozione giudiziaria: il potere politico di Epstein direttamente collegato all'evasione della giustizia per 30+ vittime minorenni.</div>
+            <div class="ev-docs">Doc: <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA01191873.pdf" target="_blank">EFTA01191873</a> &bull; DataSet_9</div>
+        </div>
+
+        <div class="evidence-box bridge">
+            <div class="ev-head">
+                <h4>Bill Gates, reti di abuso, fonti governative</h4>
+                <span class="badge b-bridge">MIDPOINT</span>
+            </div>
+            <div class="ev-sims">sim<sub>Potenti</sub>=0.2771 &bull; sim<sub>Vittime</sub>=0.5840 &bull; min=0.2771</div>
+            <div class="ev-quote">
+                <span class="hl2">Bill Gates</span> involvement in <span class="hl">Sexual Abuse Rings</span>
+                involving Government sources, Police Sources, Prominent people and connected to Epstein and Maxwell.
+            </div>
+            <div class="ev-analysis">Riferimento diretto a Gates in un contesto di reti di abuso con fonti governative e di polizia.</div>
+            <div class="ev-docs">Doc: <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00263175.pdf" target="_blank">EFTA00263175</a> &bull; DataSet_9</div>
+        </div>
+    </div>
+
+    <!-- BRIDGE: Copertura <-> Proprieta -->
+    <div class="bridge-pair">
+        <div class="pair-header">
+            <div class="pair-title"><span class="c1">Copertura e insabbiamento</span><span class="arrow">&harr;</span><span class="c2">Propriet&agrave; e luoghi</span></div>
+            <div class="pair-corr">correlazione: <span class="val">&minus;0.01</span></div>
+        </div>
+        <div class="pair-stats">
+            <div class="ps">Intersezione: <strong>1 documento</strong></div>
+            <div class="ps">Strategia midpoint: <strong>10 documenti</strong></div>
+        </div>
+
+        <div class="evidence-box bridge">
+            <div class="ev-head">
+                <h4>FBI restituisce computer sequestrato a investigatore privato di Epstein</h4>
+                <span class="badge b-bridge">MIDPOINT</span>
+            </div>
+            <div class="ev-sims">sim<sub>Copertura</sub>=0.4851 &bull; sim<sub>Propriet&agrave;</sub>=0.3377 &bull; min=0.3377</div>
+            <div class="ev-quote">
+                After taking the deposition of Police Chief Michael Reiter, it came to our attention that apparently
+                <span class="hl">a computer which was initially seized during the search warrant conducted on Mr. Epstein's home
+                was returned by the FBI to a private investigator employed by Mr. Epstein</span>.
+                We would like to determine who this computer was returned to.
+            </div>
+            <div class="ev-analysis">Lettera di avvocati delle vittime: un computer sequestrato dalla casa di Epstein fu restituito dall'FBI a un investigatore privato di Epstein. Possibile distruzione di prove.</div>
+            <div class="ev-docs">Doc: <a href="https://www.justice.gov/epstein/files/DataSet%2010/EFTA01657826.pdf" target="_blank">EFTA01657826</a> &bull; DataSet_10</div>
+        </div>
+    </div>
+
+    <!-- BRIDGE: Abusi <-> Voli -->
+    <div class="bridge-pair">
+        <div class="pair-header">
+            <div class="pair-title"><span class="c1">Abusi durante massaggi</span><span class="arrow">&harr;</span><span class="c2">Voli e spostamenti</span></div>
+            <div class="pair-corr">correlazione: <span class="val">0.01</span></div>
+        </div>
+        <div class="pair-stats">
+            <div class="ps">Intersezione: <strong>0 documenti</strong></div>
+            <div class="ps">Strategia midpoint: <strong>10 documenti</strong></div>
+        </div>
+
+        <div class="evidence-box bridge">
+            <div class="ev-head">
+                <h4>Tavolo da massaggio sul Boeing 727</h4>
+                <span class="badge b-bridge">MIDPOINT</span>
+            </div>
+            <div class="ev-sims">sim<sub>Abusi</sub>=0.3466 &bull; sim<sub>Voli</sub>=0.4973 &bull; min=0.3466</div>
+            <div class="ev-quote">
+                Was there a <span class="hl">massage table on the airplane</span>? Which aircraft?
+                On any of them? <span class="hl2">The Boeing used to have a table on there</span>, but it stayed
+                in the same spot and appeared to be never used. So to the best of your knowledge, you have
+                no knowledge of that massage table on the airplane ever being used? Correct.
+            </div>
+            <div class="ev-analysis">Deposizione del pilota Larry Visoski: conferma l'esistenza di un tavolo da massaggio sul Boeing 727, pur negandone l'uso.</div>
+            <div class="ev-docs">Doc: <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00159483.pdf" target="_blank">EFTA00159483</a> &bull; DataSet_9</div>
+        </div>
+
+        <div class="evidence-box bridge">
+            <div class="ev-head">
+                <h4>Violenza sul Gulfstream: "grabbed by the neck and shook her hard"</h4>
+                <span class="badge b-bridge">MIDPOINT</span>
+            </div>
+            <div class="ev-sims">sim<sub>Abusi</sub>=0.4628 &bull; sim<sub>Voli</sub>=0.3688 &bull; min=0.3688</div>
+            <div class="ev-quote">
+                Short flight on his <span class="hl2">Gulfstream</span>. The bed was made. When there was nudity and a sexual encounter,
+                EPSTEIN wanted to have sex. Sexual encounters were predominantly associated with <span class="hl">massages</span>.
+                There was a very strange situation on the plane when <span class="hl">EPSTEIN grabbed [her] by the neck and shook her hard</span>.
+            </div>
+            <div class="ev-analysis">Intervista FBI: abusi fisici e sessuali sul jet privato. Violenza esplicita durante i voli.</div>
+            <div class="ev-docs">Doc: <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00173808.pdf" target="_blank">EFTA00173808</a> &bull; DataSet_9</div>
+        </div>
+    </div>
+
+    <!-- BRIDGE: Traffico <-> Copertura (highest intersection) -->
+    <div class="bridge-pair">
+        <div class="pair-header">
+            <div class="pair-title"><span class="c1">Traffico internazionale</span><span class="arrow">&harr;</span><span class="c2">Copertura e insabbiamento</span></div>
+            <div class="pair-corr">correlazione: <span class="val">0.04</span></div>
+        </div>
+        <div class="pair-stats">
+            <div class="ps">Intersezione: <strong>10 documenti</strong> (la pi&ugrave; alta)</div>
+            <div class="ps">Strategia midpoint: <strong>10 documenti</strong></div>
+        </div>
+
+        <div class="evidence-box bridge">
+            <div class="ev-head">
+                <h4>Vittime da Turchia, Repubblica Ceca, Asia &mdash; "solo le afroamericane escluse"</h4>
+                <span class="badge b-bridge">MIDPOINT</span>
+            </div>
+            <div class="ev-sims">sim<sub>Traffico</sub>=0.6291 &bull; sim<sub>Copertura</sub>=0.3867 &bull; min=0.3867</div>
+            <div class="ev-quote">
+                Defendant transported minor girls from <span class="hl2">Turkey, the Czech Republic, Asia, and numerous other countries</span>,
+                many of whom spoke no English. To Plaintiff's knowledge, the only females specifically
+                <span class="hl">excluded from Defendant's sexual escapades were African-Americans</span>.
+                Plaintiff was also required to be sexually exploited by Defendant's adult male peers.
+            </div>
+            <div class="ev-analysis">Reclamo che dettaglia il traffico internazionale di minorenni: ragazze da pi&ugrave; continenti, molte senza conoscere l'inglese.</div>
+            <div class="ev-docs">Doc: <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00621400.pdf" target="_blank">EFTA00621400</a> &bull; DataSet_9</div>
+        </div>
+
+        <div class="evidence-box intersection">
+            <div class="ev-head">
+                <h4>Email negoziazione plea deal &mdash; "satisfied in principle"</h4>
+                <span class="badge b-inter">INTERSEZIONE</span>
+            </div>
+            <div class="ev-sims">sim<sub>Traffico</sub>=0.6133 &bull; sim<sub>Copertura</sub>=0.6688 &bull; min=0.6133</div>
+            <div class="ev-quote">
+                Jay &mdash; it was nice seeing you again. [Redacted] and I talked with Alex and [redacted].
+                <span class="hl">We are all satisfied in principle with the agreement</span>, but the Office is
+                <span class="hl2">uncomfortable with the recommended federal charge</span>.
+            </div>
+            <div class="ev-analysis">Email tra avvocati durante le negoziazioni del non-prosecution agreement. Mostra il processo di insabbiamento dall'interno.</div>
+            <div class="ev-docs">Doc: <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00235326.pdf" target="_blank">EFTA00235326</a> &bull; DataSet_9 &bull; Exhibit A, Jane Doe #1 &amp; #2</div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== THE SUPER-CONNECTOR ===== -->
+<div class="section" id="superconnector">
+    <h2>Il Documento pi&ugrave; Connettivo del Corpus</h2>
+    <p style="font-size:.9em;color:var(--dim);margin-bottom:14px;">
+        Un singolo documento appare nell'intersezione di <strong>3 bridge diversi</strong> &mdash; il che lo rende il frammento di testo pi&ugrave; "connettivo" dell'intero corpus di 3.14 milioni di chunk.
+    </p>
+
+    <div class="evidence-box intersection" style="border-left-width:6px;">
+        <div class="ev-head">
+            <h4>Jane Doe 1 &amp; 2 &mdash; Motion for Partial Summary Judgment</h4>
+            <span class="badge b-inter">3x INTERSEZIONE</span>
+        </div>
+        <div class="ev-sims" style="line-height:1.8;">
+            Appare nell'intersezione di:<br>
+            &bull; Abusi durante massaggi &harr; Propriet&agrave; (sim: 0.67 / 0.63)<br>
+            &bull; Copertura &harr; Propriet&agrave; (sim: 0.69 / 0.63)<br>
+            &bull; Traffico &harr; Copertura (sim: 0.63 / 0.69)
+        </div>
+        <div class="ev-quote">
+            UNITED STATES DISTRICT COURT, SOUTHERN DISTRICT OF FLORIDA &mdash; Case No. 9:08-cv-80736-KAM &mdash;
+            JANE DOE 1 AND JANE DOE 2, Petitioners, v. UNITED STATES, Respondent. &mdash;
+            <span class="hl">CONSOLIDATED STATEMENT OF UNDISPUTED MATERIAL FACTS AND MOTION FOR PARTIAL SUMMARY JUDGMENT</span>
+            WITH INCORPORATED MEMORANDUM OF LAW.
+        </div>
+        <div class="ev-analysis">Questa mozione raccoglie in un unico documento giudiziario i fatti su abusi, propriet&agrave;, copertura e traffico. Per questo il modello vettoriale lo "vede" come ponte tra pi&ugrave; mondi &mdash; &egrave; effettivamente un documento-sintesi dell'intera vicenda.</div>
+        <div class="ev-docs">Doc: <a href="https://www.justice.gov/epstein/files/DataSet%209/EFTA00184224.pdf" target="_blank">EFTA00184224</a> &bull; DataSet_9 &bull; Filed 02/10/2016</div>
+    </div>
+</div>
+
+<!-- ===== SUMMARY PATTERNS ===== -->
+<div class="section" id="patterns">
+    <h2>Pattern Emergenti</h2>
+    <div class="pat-grid">
+        <div class="pat">
+            <h4>Il Muro pi&ugrave; Alto</h4>
+            <p>La correlazione tra <strong>Abusi</strong> e <strong>Transazioni finanziarie</strong> &egrave;
+            <span class="num">&minus;0.004</span> &mdash; praticamente zero. I mondi degli abusi e della finanza sono completamente separati nel corpus.
+            I pochi ponti trovati (QAT Consulting, Southern Trust) sono per questo eccezionalmente significativi.</p>
+        </div>
+        <div class="pat">
+            <h4>I Jet come Hub</h4>
+            <p>I documenti sui <strong>voli privati</strong> appaiono come ponte in <span class="num">4 bridge diversi</span>
+            (con Pattern, Vittime, Abusi, Pagamenti). Il jet privato era il nodo fisico che collegava tutti gli aspetti dell'operazione.</p>
+        </div>
+        <div class="pat">
+            <h4>Email vs. Filing</h4>
+            <p>Le <strong>email di Epstein</strong> sono i ponti pi&ugrave; rivelatori (spa sulla nursery, flights on hold).
+            I <strong>filing legali</strong> (summary judgments, incriminazioni) sono i ponti naturali perch&eacute; raccolgono prove da mondi diversi.</p>
+        </div>
+        <div class="pat">
+            <h4>L'Intersezione pi&ugrave; Alta</h4>
+            <p><strong>Traffico internazionale &harr; Copertura</strong> ha <span class="num">10 documenti</span> in intersezione &mdash;
+            la pi&ugrave; alta. Significa che i documenti sul trafficking contengono sistematicamente anche elementi di insabbiamento.
+            L'insabbiamento era parte integrante del trafficking.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ===== INTERSECTION TABLE ===== -->
+<div class="section" id="intersections">
+    <h2>Mappa delle Intersezioni</h2>
+    <p style="font-size:.9em;color:var(--dim);margin-bottom:14px;">Numero di documenti che appaiono nei top-200 di entrambi i concetti di ciascuna coppia. Zero significa che i due concetti non condividono nessun documento rilevante.</p>
+    <div style="overflow-x:auto;">
+    <table style="width:auto;border-collapse:collapse;font-size:.85em;margin:0 auto;">
+        <thead>
+            <tr>
+                <th style="background:var(--surface2);color:var(--accent2);padding:10px 14px;text-align:left;position:static;cursor:default;">Coppia di concetti</th>
+                <th style="background:var(--surface2);color:var(--accent2);padding:10px 14px;text-align:center;position:static;cursor:default;">Correlazione</th>
+                <th style="background:var(--surface2);color:var(--accent2);padding:10px 14px;text-align:center;position:static;cursor:default;">Documenti intersezione</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td style="padding:8px 14px;border-bottom:1px solid var(--border);">Traffico internazionale &harr; Copertura</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;font-family:monospace;">0.041</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;font-weight:bold;color:var(--gold);">10</td></tr>
+            <tr><td style="padding:8px 14px;border-bottom:1px solid var(--border);">Abusi &harr; Propriet&agrave;</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;font-family:monospace;">&minus;0.009</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;font-weight:bold;color:var(--gold);">8</td></tr>
+            <tr><td style="padding:8px 14px;border-bottom:1px solid var(--border);">Pagamenti &harr; Propriet&agrave;</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;font-family:monospace;">0.039</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;font-weight:bold;color:var(--accent2);">6</td></tr>
+            <tr><td style="padding:8px 14px;border-bottom:1px solid var(--border);">Reclutamento &harr; Copertura</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;font-family:monospace;">&minus;0.006</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;font-weight:bold;color:var(--accent2);">4</td></tr>
+            <tr><td style="padding:8px 14px;border-bottom:1px solid var(--border);">Propriet&agrave; &harr; Pattern</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;font-family:monospace;">0.041</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;font-weight:bold;color:var(--accent2);">4</td></tr>
+            <tr><td style="padding:8px 14px;border-bottom:1px solid var(--border);">Potenti &harr; Vittime</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;font-family:monospace;">0.012</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;">1</td></tr>
+            <tr><td style="padding:8px 14px;border-bottom:1px solid var(--border);">Abusi &harr; Potenti</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;font-family:monospace;">&minus;0.017</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;">1</td></tr>
+            <tr><td style="padding:8px 14px;border-bottom:1px solid var(--border);">Copertura &harr; Propriet&agrave;</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;font-family:monospace;">&minus;0.011</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;">1</td></tr>
+            <tr style="color:var(--dim);"><td style="padding:8px 14px;border-bottom:1px solid var(--border);">Copertura &harr; Voli</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;font-family:monospace;">&minus;0.108</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;">0</td></tr>
+            <tr style="color:var(--dim);"><td style="padding:8px 14px;border-bottom:1px solid var(--border);">Pattern &harr; Voli</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;font-family:monospace;">&minus;0.084</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;">0</td></tr>
+            <tr style="color:var(--dim);"><td style="padding:8px 14px;border-bottom:1px solid var(--border);">Reclutamento &harr; Transazioni</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;font-family:monospace;">&minus;0.022</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;">0</td></tr>
+            <tr style="color:var(--dim);"><td style="padding:8px 14px;border-bottom:1px solid var(--border);">Abusi &harr; Transazioni</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;font-family:monospace;">&minus;0.004</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;">0</td></tr>
+            <tr style="color:var(--dim);"><td style="padding:8px 14px;border-bottom:1px solid var(--border);">Vittime &harr; Voli</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;font-family:monospace;">0.002</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;">0</td></tr>
+            <tr style="color:var(--dim);"><td style="padding:8px 14px;border-bottom:1px solid var(--border);">Abusi &harr; Voli</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;font-family:monospace;">0.010</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;">0</td></tr>
+            <tr style="color:var(--dim);"><td style="padding:8px 14px;border-bottom:1px solid var(--border);">Pagamenti &harr; Voli</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;font-family:monospace;">0.015</td><td style="padding:8px 14px;border-bottom:1px solid var(--border);text-align:center;">0</td></tr>
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<div class="footer">
+    PARRHESEPSTEIN &mdash; Dati estratti da DOJ Declassified Documents &mdash;
+    Bridging Analysis su 3,140,085 chunk &mdash; 14 concetti &times; 15 coppie &mdash;
+    <a href="https://www.justice.gov/epstein" style="color:var(--accent3)">justice.gov/epstein</a>
+</div>
+
+</div><!-- /container -->
+
+<script>
+// ===== CHARTS =====
+const highPairs = [
+    {label:'Reclutamento \u2194 Traffico', v:0.70},
+    {label:'Reclutamento \u2194 Rete complici', v:0.67},
+    {label:'Reclutamento \u2194 Abusi', v:0.64},
+    {label:'Reclutamento \u2194 Pattern', v:0.63},
+    {label:'Abusi \u2194 Rete complici', v:0.58},
+    {label:'Traffico \u2194 Pattern', v:0.56},
+    {label:'Traffico \u2194 Rete complici', v:0.54},
+    {label:'Abusi \u2194 Vittime', v:0.52}
+];
+const lowPairs = [
+    {label:'Copertura \u2194 Voli', v:-0.108},
+    {label:'Pattern \u2194 Voli', v:-0.084},
+    {label:'Reclutamento \u2194 Transazioni', v:-0.022},
+    {label:'Abusi \u2194 Potenti', v:-0.017},
+    {label:'Copertura \u2194 Propriet\u00e0', v:-0.011},
+    {label:'Abusi \u2194 Propriet\u00e0', v:-0.009},
+    {label:'Reclutamento \u2194 Copertura', v:-0.006},
+    {label:'Abusi \u2194 Transazioni', v:-0.004},
+    {label:'Vittime \u2194 Voli', v:0.002},
+    {label:'Abusi \u2194 Voli', v:0.010}
+];
+
+new Chart(document.getElementById('chartHigh'), {
+    type:'bar',
+    data:{
+        labels:highPairs.map(p=>p.label),
+        datasets:[{
+            data:highPairs.map(p=>p.v),
+            backgroundColor:'rgba(230,57,70,.6)',
+            borderColor:'#e63946',
+            borderWidth:1
+        }]
+    },
+    options:{
+        indexAxis:'y',
+        responsive:true,
+        plugins:{legend:{display:false}},
+        scales:{
+            x:{min:0,max:1,ticks:{color:'#888'},grid:{color:'#252540'}},
+            y:{ticks:{color:'#ddd',font:{size:11}},grid:{display:false}}
+        }
+    }
+});
+
+new Chart(document.getElementById('chartLow'), {
+    type:'bar',
+    data:{
+        labels:lowPairs.map(p=>p.label),
+        datasets:[{
+            data:lowPairs.map(p=>p.v),
+            backgroundColor:lowPairs.map(p=> p.v < 0 ? 'rgba(42,157,143,.6)' : 'rgba(244,162,97,.4)'),
+            borderColor:lowPairs.map(p=> p.v < 0 ? '#2a9d8f' : '#f4a261'),
+            borderWidth:1
+        }]
+    },
+    options:{
+        indexAxis:'y',
+        responsive:true,
+        plugins:{legend:{display:false}},
+        scales:{
+            x:{min:-0.15,max:0.05,ticks:{color:'#888'},grid:{color:'#252540'}},
+            y:{ticks:{color:'#ddd',font:{size:11}},grid:{display:false}}
+        }
+    }
+});
+
+// ===== RENDER KaTeX FORMULAS =====
+document.addEventListener('DOMContentLoaded', function() {
+    const formulas = {
+        'formula-concept': {
+            tex: "\\vec{V}_{\\text{concept}} = \\text{normalize}\\left(\\frac{1}{4}\\sum_{k=1}^{4} E(q_k)\\right) = \\frac{\\bar{v}}{\\|\\bar{v}\\|}",
+            fallback: "V_concept = normalize(1/4 &times; &Sigma; E(q_k)) = v&#772; / ||v&#772;||"
+        },
+        'formula-cosine': {
+            tex: "\\text{sim}(V_i, V_j) = \\cos(\\theta) = \\frac{V_i \\cdot V_j}{\\|V_i\\| \\times \\|V_j\\|} = \\sum_{d=1}^{384} V_i^{(d)} \\cdot V_j^{(d)}",
+            fallback: "sim(Vi, Vj) = cos(&theta;) = (Vi &middot; Vj) / (||Vi|| &times; ||Vj||)"
+        },
+        'formula-midpoint': {
+            tex: "\\vec{B} = \\text{normalize}\\left(\\frac{\\vec{V}_{C_1} + \\vec{V}_{C_2}}{2}\\right), \\quad \\text{filtro:} \\; \\min\\left(\\text{sim}(doc, C_1),\\; \\text{sim}(doc, C_2)\\right) \\geq 0.15",
+            fallback: "B = normalize((V_C1 + V_C2) / 2), filtro: min(sim(doc,C1), sim(doc,C2)) &ge; 0.15"
+        },
+        'formula-intersection': {
+            tex: "\\text{Ponti} = \\text{Top}_{200}(C_1) \\;\\cap\\; \\text{Top}_{200}(C_2), \\quad \\text{rank by} \\; \\min\\left(\\text{sim}_{C_1},\\; \\text{sim}_{C_2}\\right)",
+            fallback: "Ponti = Top200(C1) &cap; Top200(C2), rank by min(sim_C1, sim_C2)"
+        }
+    };
+
+    for (const [id, f] of Object.entries(formulas)) {
+        try {
+            katex.render(f.tex, document.getElementById(id), {displayMode:true, throwOnError:false});
+        } catch(e) {
+            document.getElementById(id).innerHTML = f.fallback;
+        }
+    }
+});
+</script>
+</body>
+</html>
