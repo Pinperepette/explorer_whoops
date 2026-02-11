@@ -115,7 +115,90 @@
 
         .footer { text-align:center; padding:30px; color:var(--dim); font-size:.8em; border-top:1px solid var(--border); margin-top:30px; }
 
-        @media(max-width:900px) { .charts,.pat-grid { grid-template-columns:1fr; } }
+        @media(max-width:900px) {
+            .charts,.pat-grid { grid-template-columns:1fr; }
+            .header { padding:20px 15px 18px; }
+            .header h1 { font-size:1.6em; }
+            .container { padding:12px 10px; }
+            .filters { flex-direction:column; }
+            .filters input,.filters select { width:100%; }
+        }
+
+        @media(max-width:768px) {
+            .header { padding:16px 12px 14px; }
+            .header .brand { font-size:.7em; letter-spacing:3px; }
+            .header h1 { font-size:1.4em; letter-spacing:1px; }
+            .header .term-label { font-size:1em; padding:4px 16px; }
+            .stats-bar { gap:6px; }
+            .stat { padding:6px 10px; flex:1; min-width:70px; }
+            .stat .n { font-size:1.2em; }
+            .stat .l { font-size:.68em; }
+            .section { padding:14px 10px; margin-bottom:14px; }
+            .section h2 { font-size:1.1em; }
+            .cat-grid { grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:8px; }
+            .cat-card { padding:10px; }
+            .cat-card .cnt { font-size:1.4em; }
+            .cbox { padding:12px; }
+            .cbox canvas { max-height:220px; }
+            .pat { padding:10px; }
+            .pat p { font-size:.82em; }
+
+            table thead { display:none; }
+            table, table tbody, table tr, table td { display:block; width:100%; }
+            table tr {
+                background:var(--surface2); border:1px solid var(--border);
+                border-radius:10px; margin-bottom:12px; padding:14px;
+                position:relative;
+            }
+            table tr:hover { background:var(--surface2); }
+            table td {
+                display:flex; justify-content:space-between; align-items:flex-start;
+                padding:6px 0; border-bottom:1px solid rgba(255,255,255,.06);
+                font-size:.85em;
+            }
+            table td:first-child { display:none; }
+            table td:last-child { border-bottom:none; }
+            table td::before {
+                content:attr(data-label);
+                font-weight:bold; color:var(--accent2); font-size:.75em;
+                text-transform:uppercase; letter-spacing:.5px;
+                min-width:85px; flex-shrink:0; padding-right:8px;
+                padding-top:2px;
+            }
+            table td.ctx { flex-direction:column; }
+            table td.ctx::before { margin-bottom:4px; }
+            .ctx { max-width:100%; font-size:.82em; line-height:1.5; word-break:break-word; }
+            .twrap { overflow-x:visible; }
+
+            .pag { flex-wrap:wrap; gap:4px; }
+            .pag button { padding:10px 16px; font-size:.9em; min-width:44px; min-height:44px; border-radius:6px; }
+
+            .footer { padding:20px 10px; font-size:.72em; }
+        }
+
+        @media(max-width:480px) {
+            .header { padding:12px 10px 12px; }
+            .header .brand { font-size:.62em; letter-spacing:2px; }
+            .header h1 { font-size:1.15em; }
+            .header .term-label { font-size:.9em; padding:3px 12px; margin-top:6px; }
+            .stats-bar { flex-wrap:wrap; gap:4px; justify-content:center; }
+            .stat { padding:5px 8px; min-width:60px; }
+            .stat .n { font-size:1em; }
+            .stat .l { font-size:.6em; }
+            .container { padding:8px 6px; }
+            .section { padding:10px 8px; border-radius:8px; }
+            .cat-grid { grid-template-columns:1fr 1fr; gap:6px; }
+            .cat-card .cnt { font-size:1.2em; }
+            .cbox canvas { max-height:180px; }
+            .filters input,.filters select { font-size:.85em; padding:10px; }
+
+            table tr { padding:10px; margin-bottom:10px; border-radius:8px; }
+            table td { font-size:.8em; padding:5px 0; }
+            table td::before { font-size:.7em; min-width:75px; }
+            .ctx { font-size:.78em; }
+
+            .pag button { padding:8px 12px; font-size:.82em; min-width:40px; min-height:40px; }
+        }
     </style>
 </head>
 <body>
@@ -276,7 +359,7 @@ function hlSnippet(t){
     return(s>0?"...":"")+sn+(e<t.length?"...":"");
 }
 
-let D=[],F=[],pg=1,PP=50,sCol=null,sAsc=true;
+let D=[],F=[],pg=1,PP=window.innerWidth<=768?20:50,sCol=null,sAsc=true;
 
 function init(){
     D=RAW.map((r,i)=>{
@@ -312,6 +395,8 @@ function renderCats(){
 }
 
 function renderCharts(){
+    const isMobile=window.innerWidth<=768;
+    const legendPos=isMobile?"bottom":"right";
     // Year
     const yc={};D.forEach(r=>{if(r.year!=="N/A")yc[r.year]=(yc[r.year]||0)+1;});
     const yl=Object.keys(yc).sort();
@@ -320,7 +405,7 @@ function renderCharts(){
     // Cat donut
     const cc={};D.forEach(r=>{cc[r._cat.name]=(cc[r._cat.name]||0)+1;});
     const cl=Object.entries(cc).sort((a,b)=>b[1]-a[1]).map(e=>e[0]);
-    new Chart(document.getElementById("cCat"),{type:"doughnut",data:{labels:cl,datasets:[{data:cl.map(c=>cc[c]),backgroundColor:cl.map(c=>(CATS[c]?.color||"#555")+"99"),borderColor:cl.map(c=>CATS[c]?.color||"#555"),borderWidth:2}]},options:{responsive:true,plugins:{legend:{position:"right",labels:{color:"#bbb",font:{size:11}}}}}});
+    new Chart(document.getElementById("cCat"),{type:"doughnut",data:{labels:cl,datasets:[{data:cl.map(c=>cc[c]),backgroundColor:cl.map(c=>(CATS[c]?.color||"#555")+"99"),borderColor:cl.map(c=>CATS[c]?.color||"#555"),borderWidth:2}]},options:{responsive:true,plugins:{legend:{position:legendPos,labels:{color:"#bbb",font:{size:isMobile?9:11}}}}}});
 
     // Senders
     const sc={};D.forEach(r=>{sc[r.sender]=(sc[r.sender]||0)+1;});
@@ -337,7 +422,7 @@ function renderCharts(){
     D.forEach(r=>{sentC[r.sentiment.label]=(sentC[r.sentiment.label]||0)+1;});
     const sentL=["Positivo","Negativo","Neutro"];
     const sentColors=["#27ae60","#c0392b","#7f8c8d"];
-    new Chart(document.getElementById("cSent"),{type:"doughnut",data:{labels:sentL,datasets:[{data:sentL.map(s=>sentC[s]),backgroundColor:sentColors.map(c=>c+"99"),borderColor:sentColors,borderWidth:2}]},options:{responsive:true,plugins:{legend:{position:"right",labels:{color:"#bbb",font:{size:11}}}}}});
+    new Chart(document.getElementById("cSent"),{type:"doughnut",data:{labels:sentL,datasets:[{data:sentL.map(s=>sentC[s]),backgroundColor:sentColors.map(c=>c+"99"),borderColor:sentColors,borderWidth:2}]},options:{responsive:true,plugins:{legend:{position:legendPos,labels:{color:"#bbb",font:{size:isMobile?9:11}}}}}});
 
     // Sentiment × Categoria stacked bar
     const mx={};
@@ -413,14 +498,14 @@ function renderTable(){
     const s=(pg-1)*PP, page=F.slice(s,s+PP);
     document.getElementById("rcount").textContent=F.length+" risultati su "+D.length;
     document.getElementById("tbody").innerHTML=page.map((r,i)=>`<tr>
-        <td>${s+i+1}</td>
-        <td><a class="dlink" href="${dojUrl(r.doc_id,r.dataset)}" target="_blank">${r.doc_id}</a></td>
-        <td>${r.dataset}</td>
-        <td>${r.sender}</td>
-        <td>${r.year}</td>
-        <td><span class="badge ${r._cat.c}">${r._cat.name}</span></td>
-        <td><span class="badge ${r.sentiment.cls}">${r.sentiment.label}</span></td>
-        <td class="ctx">${hlSnippet(r.text)}</td>
+        <td data-label="#">${s+i+1}</td>
+        <td data-label="Doc ID"><a class="dlink" href="${dojUrl(r.doc_id,r.dataset)}" target="_blank">${r.doc_id}</a></td>
+        <td data-label="Dataset">${r.dataset}</td>
+        <td data-label="Mittente">${r.sender}</td>
+        <td data-label="Anno">${r.year}</td>
+        <td data-label="Categoria"><span class="badge ${r._cat.c}">${r._cat.name}</span></td>
+        <td data-label="Sentiment"><span class="badge ${r.sentiment.cls}">${r.sentiment.label}</span></td>
+        <td data-label="Contesto" class="ctx">${hlSnippet(r.text)}</td>
     </tr>`).join("");
 
     const tp=Math.ceil(F.length/PP),P=document.getElementById("pag");
