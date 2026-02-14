@@ -158,6 +158,7 @@
     <a href="bridging-analysis.html">Bridging Analysis</a>
     <a href="network-analysis.html" class="active">Network Analysis</a>
     <a href="discovery-analysis.html">Discovery</a>
+    <a href="entity-graph.html">Entity Graph</a>
 </nav>
 
 <div class="header">
@@ -689,9 +690,10 @@
         <div class="doc-meta">PageRank: 0.00150 &bull; Authority: 0.000 &bull; In-degree: <strong>273 (MAX)</strong> &bull; Community: 4</div>
         <div class="doc-text">
             <strong>Documento con il pi&ugrave; alto in-degree dell'intera rete (273).</strong>
-            Contiene dati codificati/binari (base64 o simile). Authority = 0 ma in-degree massimo &mdash;
-            molti documenti codificati gli somigliano, ma lui stesso non punta a documenti authority.
-            Questo suggerisce un <strong>cluster isolato di dati criptati/codificati</strong> nel corpus.
+            PDF multi-documento del DataSet 9 contenente 1.099 pagine di corrispondenza,
+            allegati email e materiale procedurale. L'elevato in-degree riflette la variet&agrave;
+            tematica interna: centinaia di sotto-documenti eterogenei generano similarit&agrave;
+            con molte comunit&agrave; diverse, rendendo questo nodo un attrattore trasversale nella rete.
         </div>
     </div>
 
@@ -750,9 +752,10 @@
         </div>
         <div class="doc-meta">DataSet 9: 1,481 &bull; DataSet 11: 148 &bull; DataSet 10: 26</div>
         <div class="doc-text">
-            <strong>Dati codificati/criptati.</strong> Un'intera comunit&agrave; di 1,657 chunk
-            contiene prevalentemente dati in formato binario/base64. Quasi totalmente dal DataSet 9 (89%).
-            La natura di questi dati codificati resta non determinata.
+            <strong>Raccolta multi-documento.</strong> Questa comunit&agrave; raggruppa chunk
+            provenienti da PDF compositi del DOJ &mdash; raccolte di email, allegati e materiale
+            procedurale aggregato per volume. La struttura eterogenea di questi documenti
+            li rende semanticamente distinti dalle altre comunit&agrave; tematiche.
         </div>
     </div>
 
@@ -806,12 +809,13 @@
     </div>
 
     <div class="key-finding">
-        <h3>2. Il Cluster dei Dati Codificati</h3>
+        <h3>2. Raccolte Multi-Documento come Attrattori</h3>
         <p>
             EFTA01011526 emerge sia come gatekeeper spettrale (#2 per in-degree = 273) che come
-            influencer PageRank (#7). Un'intera comunit&agrave; di <strong>1,657 chunk</strong> contiene
-            dati in formato codificato. Questo cluster, quasi interamente dal DataSet 9, rappresenta
-            una massa significativa di contenuto la cui natura resta da determinare.
+            influencer PageRank (#7). Si tratta di una <strong>raccolta multi-documento</strong>
+            di 1.099 pagine contenente email, allegati e materiale procedurale eterogeneo.
+            La variet&agrave; tematica interna genera connessioni con molte comunit&agrave; diverse,
+            spiegando l'alto in-degree e il ruolo di ponte nella rete semantica.
         </p>
     </div>
 
@@ -852,7 +856,7 @@
 
 <div style="text-align:center; padding:30px; color:var(--dim); font-size:.8em; border-top:1px solid var(--border);">
     PARRHESEPSTEIN &mdash; Network Analysis | Spectral Clustering + UMAP + PageRank su 30.000 chunk
-    <br>Dati: DOJ FOIA Release &bull; 3,140,085 chunk &bull; ChromaDB + paraphrase-multilingual-MiniLM-L12-v2
+    <br>Dati: DOJ FOIA Release &bull; 3,185,489 chunk &bull; ChromaDB + paraphrase-multilingual-MiniLM-L12-v2
 </div>
 
 <script>
